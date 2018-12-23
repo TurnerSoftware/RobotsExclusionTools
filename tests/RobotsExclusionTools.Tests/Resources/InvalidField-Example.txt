@@ -1,0 +1,19 @@
+﻿Space Space: Value
+Tab	Tab: Value
+Test(Test: Value
+Test)Test: Value
+Test<Test: Value
+Test>Test: Value
+Test@Test: Value
+Test,Test: Value
+Test;Test: Value
+Test:Test: Value
+Test\Test: Value
+Test"Test: Value
+Test/Test: Value
+Test[Test: Value
+Test]Test: Value
+Test?Test: Value
+Test=Test: Value
+Test{Test: Value
+Test}Test: Value
