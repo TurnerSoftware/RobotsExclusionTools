@@ -5,7 +5,7 @@ using System.Text;
 
 namespace RobotsExclusionTools.Tokenization
 {
-	public class TokenPatternValidator
+	public class TokenPatternValidator : ITokenPatternValidator
 	{
 		private static readonly Dictionary<TokenType, TokenPattern> TokenPattern = new Dictionary<TokenType, TokenPattern>
 		{
