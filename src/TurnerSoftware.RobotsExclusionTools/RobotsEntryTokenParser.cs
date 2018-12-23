@@ -1,9 +1,9 @@
-﻿using RobotsExclusionTools.Tokenization;
+﻿using TurnerSoftware.RobotsExclusionTools.Tokenization;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools
 {
 	public class RobotsEntryTokenParser : IRobotsEntryTokenParser
 	{

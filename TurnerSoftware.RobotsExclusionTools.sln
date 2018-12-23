@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RobotsExclusionTools", "src\RobotsExclusionTools\RobotsExclusionTools.csproj", "{867C0514-09C3-4A28-94B4-3B4B24AA81FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnerSoftware.RobotsExclusionTools", "src\TurnerSoftware.RobotsExclusionTools\TurnerSoftware.RobotsExclusionTools.csproj", "{867C0514-09C3-4A28-94B4-3B4B24AA81FC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EAC5F45A-CDAF-42E3-8F3C-D2F461B35989}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AF244BF7-0460-43D1-B44A-C96ADFB8627E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RobotsExclusionTools.Tests", "tests\RobotsExclusionTools.Tests\RobotsExclusionTools.Tests.csproj", "{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnerSoftware.RobotsExclusionTools.Tests", "tests\TurnerSoftware.RobotsExclusionTools.Tests\TurnerSoftware.RobotsExclusionTools.Tests.csproj", "{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,11 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests
 {
 	[TestClass]
 	public class TokenPatternValidatorTests : TestBase
@@ -36,8 +36,8 @@ namespace RobotsExclusionTools.Tests
 			Assert.IsFalse(result.IsValid);
 
 			var firstErrorExpectedTokens = result.Errors.First().Expected;
-			Assert.AreEqual(TokenType.Field, firstErrorExpectedTokens.ElementAt(0));
-			Assert.AreEqual(TokenType.FieldValueDeliminter, firstErrorExpectedTokens.ElementAt(1));
+			Assert.AreEqual(TokenType.FieldValueDeliminter, firstErrorExpectedTokens.ElementAt(0));
+			Assert.AreEqual(TokenType.Field, firstErrorExpectedTokens.ElementAt(1));
 			Assert.AreEqual(2, firstErrorExpectedTokens.Count());
 			Assert.AreEqual(19, result.Errors.Count());
 		}

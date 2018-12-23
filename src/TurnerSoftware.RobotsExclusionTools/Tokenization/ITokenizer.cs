@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotsExclusionTools.Tokenization
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
 	public interface ITokenizer
 	{

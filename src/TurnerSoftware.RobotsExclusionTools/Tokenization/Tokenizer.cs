@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace RobotsExclusionTools.Tokenization
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
 	/// <summary>
 	/// Tokenizer based on Jack Vanlightly's "Simple Tokenizer" article: https://jack-vanlightly.com/blog/2016/2/3/creating-a-simple-tokenizer-lexer-in-c

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests
 {
 	public class TestBase
 	{

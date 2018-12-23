@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools
 {
 	public interface IRobotsParser
 	{

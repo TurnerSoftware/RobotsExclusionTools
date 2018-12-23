@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RobotsExclusionTools.Tokenization
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
 	public static class Extensions
 	{

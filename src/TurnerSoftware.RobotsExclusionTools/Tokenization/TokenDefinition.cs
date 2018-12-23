@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace RobotsExclusionTools.Tokenization
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
 	public class TokenDefinition
 	{

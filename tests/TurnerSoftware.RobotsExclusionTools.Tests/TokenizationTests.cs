@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization;
 using System.IO;
 using System.Linq;
 
-namespace RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests
 {
 	[TestClass]
 	public class TokenizationTests : TestBase
