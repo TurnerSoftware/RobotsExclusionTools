@@ -16,5 +16,12 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		{
 			return LoadRobotsResource("NoRobots-RFC-Example.txt");
 		}
+
+		protected RobotsFile GetRFCRobotsFile()
+		{
+			var robots = LoadRFCExample();
+			var robotsFile = new RobotsParser().FromString(robots, new Uri("http://www.example.org"));
+			return robotsFile;
+		}
 	}
 }
