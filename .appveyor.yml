@@ -26,4 +26,4 @@ artifacts:
   - path: '.nupkgs\*.nupkg'
 
   - path: coverage.xml
-name: Coverage Report
+    name: Coverage Report
