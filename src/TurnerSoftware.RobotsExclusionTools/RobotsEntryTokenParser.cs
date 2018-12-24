@@ -94,6 +94,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 						}
 					}
 				}
+
+				result.Add(parseState.AsEntry());
 			}
 
 			return result;
