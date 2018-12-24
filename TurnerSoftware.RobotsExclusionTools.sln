@@ -9,7 +9,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EAC5F45A-CDA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AF244BF7-0460-43D1-B44A-C96ADFB8627E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnerSoftware.RobotsExclusionTools.Tests", "tests\TurnerSoftware.RobotsExclusionTools.Tests\TurnerSoftware.RobotsExclusionTools.Tests.csproj", "{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnerSoftware.RobotsExclusionTools.Tests", "tests\TurnerSoftware.RobotsExclusionTools.Tests\TurnerSoftware.RobotsExclusionTools.Tests.csproj", "{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{969CA4D9-8FB0-4D39-8FEA-ADC663F15205}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
