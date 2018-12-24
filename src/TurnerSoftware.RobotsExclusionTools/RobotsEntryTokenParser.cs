@@ -37,6 +37,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 
 		public IEnumerable<SiteAccessEntry> GetSiteAccessEntries(IEnumerable<Token> tokens)
 		{
+			//TODO: Refactor the implementation to not be as nasty as it is :(
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
 			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
