@@ -43,6 +43,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			var sourcePieces = sourceRecord.Split(new[] { '*' }).ToArray();
 			var lastPiece = sourcePieces.LastOrDefault();
 			var mustMatchToEnd = false;
+			var mustMatchToStart = true;
 
 			if (lastPiece.EndsWith("$"))
 			{
@@ -52,20 +53,32 @@ namespace TurnerSoftware.RobotsExclusionTools
 				mustMatchToEnd = true;
 			}
 
+			if (sourceRecord.StartsWith("*"))
+			{
+				mustMatchToStart = false;
+			}
+
 			var offsetPosition = 0;
 
-			foreach (var piece in sourcePieces)
+			for (int i = 0, l = sourcePieces.Length; i < l; i++)
 			{
+				var piece = sourcePieces[i];
 				var indexPosition = uriPath.IndexOf(piece, offsetPosition, comparison);
 
-				if ((offsetPosition == 0 && indexPosition == 0) || indexPosition >= (offsetPosition + piece.Length))
+				if (mustMatchToStart && offsetPosition == 0 && indexPosition > 0)
 				{
-					offsetPosition = indexPosition + 1;
+					return false;
+				}
+
+				if (indexPosition >= offsetPosition)
+				{
+					offsetPosition = piece.Length;
 				}
 				else
 				{
 					return false;
 				}
+
 			}
 
 			if (mustMatchToEnd)
