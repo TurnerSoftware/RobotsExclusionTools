@@ -66,6 +66,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					var robotsLine = await streamReader.ReadLineAsync();
 					tokens.AddRange(Tokenizer.Tokenize(robotsLine));
+					tokens.Add(new Token(TokenType.NewLine, "\n"));
 				}
 			}
 
