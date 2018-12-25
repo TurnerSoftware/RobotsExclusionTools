@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
@@ -37,6 +38,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
 			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
+			var expectedFields = new[] { "User-agent", "Allow", "Disallow", "Crawl-delay" };
 
 			using (var enumerator = tokens.GetEnumerator())
 			{
@@ -45,11 +47,22 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					var fieldCurrent = enumerator.Current;
 
+					if (!expectedFields.Contains(fieldCurrent.Value))
+					{
+						continue;
+					}
+
 					//Reset the state when we have encountered a new "User-agent" field not immediately after another
 					if (lastFieldValue != string.Empty && lastFieldValue != "User-agent" && fieldCurrent.Value == "User-agent")
 					{
 						result.Add(parseState.AsEntry());
 						parseState.Reset();
+					}
+					
+					//When we have seen a field for the first time that isn't a User-agent, default to all User-agents
+					if (lastFieldValue == string.Empty && fieldCurrent.Value != "User-agent")
+					{
+						parseState.UserAgents.Add("*");
 					}
 
 					lastFieldValue = fieldCurrent.Value;
