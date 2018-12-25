@@ -23,21 +23,15 @@ namespace TurnerSoftware.RobotsExclusionTools
 				return true;
 			}
 
-			//Blank "Disallow" means no restriction
-			if (accessEntry.Disallow.Any(d => d == string.Empty))
+			foreach (var rule in accessEntry.PathRules)
 			{
-				return true;
-			}
-
-			if (accessEntry.Disallow.Any(d => PathMatch(d, requestPath, StringComparison.InvariantCulture)))
-			{
-				if (accessEntry.Allow.Any(a => PathMatch(a, requestPath, StringComparison.InvariantCulture)))
+				if (rule.RuleType == PathRuleType.Disallow && rule.Path == string.Empty)
 				{
 					return true;
 				}
-				else
+				else if (PathMatch(rule.Path, requestPath, StringComparison.InvariantCulture))
 				{
-					return false;
+					return rule.RuleType == PathRuleType.Allow;
 				}
 			}
 

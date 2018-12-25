@@ -30,7 +30,14 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					new SiteAccessEntry
 					{
-						Disallow = new [] { "/" }
+						PathRules = new []
+						{
+							new SiteAccessPathRule
+							{
+								Path = "/",
+								RuleType = PathRuleType.Disallow
+							}
+						}
 					}
 				}
 			};

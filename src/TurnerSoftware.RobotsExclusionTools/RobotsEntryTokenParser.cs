@@ -10,16 +10,13 @@ namespace TurnerSoftware.RobotsExclusionTools
 		private class SiteAccessParseState
 		{
 			public List<string> UserAgents { get; } = new List<string>();
-			public List<string> Disallow { get; } = new List<string>();
-
-			public List<string> Allow { get; } = new List<string>();
+			public List<SiteAccessPathRule> PathRules { get; } = new List<SiteAccessPathRule>();
 			public int? CrawlDelay { get; set; }
 
 			public void Reset()
 			{
 				UserAgents.Clear();
-				Disallow.Clear();
-				Allow.Clear();
+				PathRules.Clear();
 				CrawlDelay = null;
 			}
 
@@ -28,8 +25,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				return new SiteAccessEntry
 				{
 					UserAgents = new List<string>(UserAgents),
-					Disallow = new List<string>(Disallow),
-					Allow = new List<string>(Allow),
+					PathRules = new List<SiteAccessPathRule>(PathRules),
 					CrawlDelay = CrawlDelay
 				};
 			}
@@ -65,24 +61,27 @@ namespace TurnerSoftware.RobotsExclusionTools
 							parseState.UserAgents.Add(enumerator.Current.Value);
 						}
 					}
-					else if (fieldCurrent.Value == "Allow")
+					else if (fieldCurrent.Value == "Allow" || fieldCurrent.Value == "Disallow")
 					{
+						var pathRule = fieldCurrent.Value == "Disallow" ? PathRuleType.Disallow : PathRuleType.Allow;
+						var pathValue = string.Empty;
+
 						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
 						{
-							parseState.Allow.Add(enumerator.Current.Value);
+							pathValue = enumerator.Current.Value;
 						}
-					}
-					else if (fieldCurrent.Value == "Disallow")
-					{
-						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
+
+						if (pathRule == PathRuleType.Allow && pathValue == null)
 						{
-							parseState.Disallow.Add(enumerator.Current.Value);
+							//Only disallow can be blank (no "Value" token) - See Section 4 of RFC
+							continue;
 						}
-						else
+
+						parseState.PathRules.Add(new SiteAccessPathRule
 						{
-							//Disallow can be blank (no "Value" token) - See Section 4 of RFC
-							parseState.Disallow.Add(string.Empty);
-						}
+							RuleType = pathRule,
+							Path = pathValue
+						});
 					}
 					else if (fieldCurrent.Value == "Crawl-delay")
 					{
