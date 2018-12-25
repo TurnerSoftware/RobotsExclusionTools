@@ -80,10 +80,4 @@ namespace TurnerSoftware.RobotsExclusionTools
 			return true;
 		}
 	}
-
-	public class PathComparisonResult
-	{
-		public string MatchedOn { get; set; }
-		public bool RuleResult { get; set; }
-	}
 }
