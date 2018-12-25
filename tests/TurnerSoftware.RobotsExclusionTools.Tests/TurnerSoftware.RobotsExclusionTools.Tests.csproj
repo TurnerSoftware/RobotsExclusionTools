@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Comprehensive-Example.txt" />
     <None Remove="Resources\InvalidField-Example.txt" />
     <None Remove="Resources\NoRobots-RFC-Example.txt" />
     <None Remove="Resources\NoUserAgentRules-Example.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Resources\Comprehensive-Example.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\InvalidField-Example.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
