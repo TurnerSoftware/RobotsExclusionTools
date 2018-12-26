@@ -8,7 +8,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 {
-	[ClrJob]
+	[CoreJob, ClrJob(baseline: true)]
 	[MemoryDiagnoser]
 	public class StreamingVsStringTokenization
 	{
