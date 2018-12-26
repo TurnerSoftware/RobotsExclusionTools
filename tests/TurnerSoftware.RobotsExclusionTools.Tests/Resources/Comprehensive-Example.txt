@@ -2,6 +2,7 @@
 Crawl-delay: 60
 Disallow: 
 
+Sitemap: http://www.example.org/sitemap.xml
 
 User-agent: SinglePathAllowed
 Allow: /orgs/plan.html
@@ -28,3 +29,5 @@ Disallow: /org/plan.html?foo=bar*
 User-agent: PathMustEndWith
 Disallow: /org/plan.html$
 Disallow: /org/planb.html*$
+
+Sitemap: http://www.example.org/sitemap2.xml
