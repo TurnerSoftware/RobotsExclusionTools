@@ -48,7 +48,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			if (lastPiece.EndsWith("$"))
 			{
 				//Remove the last dollar sign from the last piece
-				lastPiece = lastPiece.Substring(lastPiece.Length - 1);
+				lastPiece = lastPiece.Substring(0, lastPiece.Length - 1);
 				sourcePieces[sourcePieces.Length - 1] = lastPiece;
 				mustMatchToEnd = true;
 			}
