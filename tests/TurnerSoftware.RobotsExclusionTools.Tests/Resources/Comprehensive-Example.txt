@@ -24,3 +24,7 @@ Disallow: /org/plan.html?
 
 User-agent: PathWithPartQueryString
 Disallow: /org/plan.html?foo=bar*
+
+User-agent: PathMustEndWith
+Disallow: /org/plan.html$
+Disallow: /org/planb.html*$
