@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{969CA4
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnerSoftware.RobotsExclusionTools.Benchmarks", "tests\TurnerSoftware.RobotsExclusionTools.Benchmarks\TurnerSoftware.RobotsExclusionTools.Benchmarks.csproj", "{1811806F-6214-4D60-A769-26C3DD8226EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,10 @@ Global
 		{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1811806F-6214-4D60-A769-26C3DD8226EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1811806F-6214-4D60-A769-26C3DD8226EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1811806F-6214-4D60-A769-26C3DD8226EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1811806F-6214-4D60-A769-26C3DD8226EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -43,6 +49,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{867C0514-09C3-4A28-94B4-3B4B24AA81FC} = {EAC5F45A-CDAF-42E3-8F3C-D2F461B35989}
 		{BFE654D1-3DCF-4EC6-A0D5-31461E82BB64} = {AF244BF7-0460-43D1-B44A-C96ADFB8627E}
+		{1811806F-6214-4D60-A769-26C3DD8226EC} = {AF244BF7-0460-43D1-B44A-C96ADFB8627E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5987BA9F-40BA-434A-A281-F23C7F18D874}
