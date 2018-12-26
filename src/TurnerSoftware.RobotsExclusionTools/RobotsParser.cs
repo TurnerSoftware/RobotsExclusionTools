@@ -26,8 +26,23 @@ namespace TurnerSoftware.RobotsExclusionTools
 		
 		public RobotsFile FromString(string robotsText, Uri baseUri)
 		{
-			var tokens = Tokenizer.Tokenize(robotsText);
-			return FromTokens(tokens, baseUri);
+			using (var memoryStream = new MemoryStream())
+			{
+				var streamWriter = new StreamWriter(memoryStream);
+				streamWriter.Write(robotsText);
+				memoryStream.Seek(0, SeekOrigin.Begin);
+
+				var tokens = new List<Token>();
+				var streamReader = new StreamReader(memoryStream);
+				while (!streamReader.EndOfStream)
+				{
+					var robotsLine = streamReader.ReadLine();
+					tokens.AddRange(Tokenizer.Tokenize(robotsLine));
+					tokens.Add(Token.NewLineToken);
+				}
+
+				return FromTokens(tokens, baseUri);
+			}
 		}
 
 		public async Task<RobotsFile> FromUriAsync(Uri robotsUri)
