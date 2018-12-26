@@ -7,10 +7,10 @@ using TurnerSoftware.RobotsExclusionTools.Tokenization;
 namespace TurnerSoftware.RobotsExclusionTools.Tests
 {
 	[TestClass]
-	public class RobotsFileTests : TestBase
+	public class RFCSpecificTests : TestBase
 	{
 		[TestMethod]
-		public void RFCRobotsFileAlwaysAllowed()
+		public void RobotsFileAlwaysAllowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
 			var comparisonUtility = new PathComparisonUtility();
@@ -24,7 +24,17 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		}
 
 		[TestMethod]
-		public void RFCUnhipbotCrawlerDisallowed()
+		public void DefaultAllUserAgentsWhenNoneExplicitlySet()
+		{
+			var robotsFile = GetRobotsFile("NoUserAgentRules-Example.txt");
+			var userAgent = "RandomUserAgent";
+
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+		}
+
+		[TestMethod]
+		public void UnhipbotCrawlerDisallowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
 			var comparisonUtility = new PathComparisonUtility();
@@ -44,7 +54,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		}
 
 		[TestMethod]
-		public void RFCExciteCrawlerAllowed()
+		public void ExciteCrawlerAllowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
 			var userAgent = "Excite/1.0";
@@ -62,7 +72,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		}
 
 		[TestMethod]
-		public void RFCWebcrawlerAllowed()
+		public void WebcrawlerAllowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
 			var userAgent = "Webcrawler/1.0";
@@ -80,7 +90,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		}
 
 		[TestMethod]
-		public void RFCOtherPartiallyAllowed()
+		public void OtherPartiallyAllowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
 			var userAgent = "SuperSpecialCrawler/1.0";
@@ -95,37 +105,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plans.html"), userAgent));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/%7Ejim/jim.html"), userAgent));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/%7Emak/mak.html"), userAgent));
-		}
-
-		[TestMethod]
-		public void DefaultAllUserAgentsWhenNoneExplicitlySet()
-		{
-			var robotsFile = GetRobotsFile("NoUserAgentRules-Example.txt");
-			var userAgent = "RandomUserAgent";
-
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-		}
-
-		[TestMethod]
-		public void CrawlDelayApplied()
-		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "AnyUserAgent";
-
-			Assert.AreEqual(60, robotsFile.GetEntryForUserAgent(userAgent).CrawlDelay);
-		}
-
-		[TestMethod]
-		public void ExplicitWildcardSuffix()
-		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "ExplicitWildcardSuffix";
-
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
 		}
 	}
 }
