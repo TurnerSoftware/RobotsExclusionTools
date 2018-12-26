@@ -29,6 +29,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 			{
 				var streamWriter = new StreamWriter(memoryStream);
 				streamWriter.Write(robotsText);
+				streamWriter.Flush();
+
 				memoryStream.Seek(0, SeekOrigin.Begin);
 				
 				var streamReader = new StreamReader(memoryStream);
