@@ -59,15 +59,13 @@ namespace TurnerSoftware.RobotsExclusionTools
 		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri)
 		{
 			var tokens = new List<Token>();
-
-			using (var streamReader = new StreamReader(stream))
+			
+			var streamReader = new StreamReader(stream);
+			while (!streamReader.EndOfStream)
 			{
-				while (!streamReader.EndOfStream)
-				{
-					var robotsLine = await streamReader.ReadLineAsync();
-					tokens.AddRange(Tokenizer.Tokenize(robotsLine));
-					tokens.Add(new Token(TokenType.NewLine, "\n"));
-				}
+				var robotsLine = await streamReader.ReadLineAsync();
+				tokens.AddRange(Tokenizer.Tokenize(robotsLine));
+				tokens.Add(Token.NewLineToken);
 			}
 
 			return FromTokens(tokens, baseUri);
