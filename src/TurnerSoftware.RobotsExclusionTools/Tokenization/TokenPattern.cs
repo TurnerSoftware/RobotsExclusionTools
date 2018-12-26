@@ -8,14 +8,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 	public class TokenPattern
 	{
 		public TokenType Token { get; }
-		public IEnumerable<TokenType> Preceeding { get; }
-		public IEnumerable<TokenType> Succeeding { get; }
+		public TokenType[] Preceeding { get; }
+		public TokenType[] Succeeding { get; }
 
-		public TokenPattern(TokenType token, IEnumerable<TokenType> preceeding, IEnumerable<TokenType> succeeding)
+		public TokenPattern(TokenType token, TokenType[] preceeding, TokenType[] succeeding)
 		{
 			Token = token;
-			Preceeding = preceeding ?? Enumerable.Empty<TokenType>();
-			Succeeding = succeeding ?? Enumerable.Empty<TokenType>();
+			Preceeding = preceeding ?? new TokenType[0];
+			Succeeding = succeeding ?? new TokenType[0];
 		}
 	}
 }

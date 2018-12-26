@@ -19,37 +19,42 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		{
 			var errors = new List<TokenValidationError>();
 
-			var preceedingTokens = new Stack<TokenType>();
-			var succeedingTokens = new Queue<TokenType>(tokens.Select(t => t.TokenType));
+			var preceedingTokens = new Stack<TokenType>(tokens.Count());
+			var succeedingTokens = new Queue<TokenType>(tokens.Select(t => t.TokenType).ToArray());
 
 			var currentToken = TokenType.NotDefined;
+			var lineNumber = 1;
 
 			while (succeedingTokens.Any())
 			{
 				currentToken = succeedingTokens.Dequeue();
-				var tokenValidation = ValidateToken(currentToken, preceedingTokens, succeedingTokens);
+
+				var tokenValidation = ValidateToken(lineNumber, currentToken, preceedingTokens, succeedingTokens);
 				if (tokenValidation != null)
 				{
 					errors.Add(tokenValidation);
 				}
 
 				preceedingTokens.Push(currentToken);
+
+				if (currentToken == TokenType.NewLine)
+				{
+					lineNumber++;
+				}
 			}
 
 			return new TokenValidationResult(errors);
 		}
 
-		private TokenValidationError ValidateToken(TokenType tokenType, Stack<TokenType> preceeding, Queue<TokenType> succeeding)
+		private TokenValidationError ValidateToken(int lineNumber, TokenType tokenType, Stack<TokenType> preceeding, Queue<TokenType> succeeding)
 		{
 			if (!TokenPattern.ContainsKey(tokenType))
 			{
 				return null;
 			}
 
-			var lineNumber = preceeding.Count(t => t == TokenType.NewLine) + 1;
-
 			var pattern = TokenPattern[tokenType];
-			if (pattern.Preceeding.Any())
+			if (pattern.Preceeding.Length > 0)
 			{
 				if (!PatternMatch(pattern.Preceeding, preceeding))
 				{
@@ -57,7 +62,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 				}
 			}
 			
-			if (pattern.Succeeding.Any())
+			if (pattern.Succeeding.Length > 0)
 			{
 				if (!PatternMatch(pattern.Succeeding, succeeding))
 				{
@@ -79,7 +84,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 
 			var sliceSize = Math.Min(initialTokens.Count(), comparisonTokens.Count());
 			var slicedTokensArray = comparisonTokens.Take(sliceSize).ToArray();
-			var initialTokensArray = initialTokens.ToArray();
+			var initialTokensArray = (TokenType[])initialTokens;
 
 			for (int i = 0, l = sliceSize; i < l; i++)
 			{
