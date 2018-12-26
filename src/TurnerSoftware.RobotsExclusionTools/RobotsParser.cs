@@ -22,7 +22,6 @@ namespace TurnerSoftware.RobotsExclusionTools
 			PatternValidator = patternValidator;
 			TokenParser = tokenParser;
 		}
-
 		
 		public RobotsFile FromString(string robotsText, Uri baseUri)
 		{
@@ -31,16 +30,9 @@ namespace TurnerSoftware.RobotsExclusionTools
 				var streamWriter = new StreamWriter(memoryStream);
 				streamWriter.Write(robotsText);
 				memoryStream.Seek(0, SeekOrigin.Begin);
-
-				var tokens = new List<Token>();
+				
 				var streamReader = new StreamReader(memoryStream);
-				while (!streamReader.EndOfStream)
-				{
-					var robotsLine = streamReader.ReadLine();
-					tokens.AddRange(Tokenizer.Tokenize(robotsLine));
-					tokens.Add(Token.NewLineToken);
-				}
-
+				var tokens = Tokenizer.Tokenize(streamReader);
 				return FromTokens(tokens, baseUri);
 			}
 		}
@@ -50,9 +42,10 @@ namespace TurnerSoftware.RobotsExclusionTools
 			var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
 			robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
 
-			using (var client = new HttpClient())
+			var request = WebRequest.CreateHttp(robotsUri);
+
+			using (var response = (HttpWebResponse)await request.GetResponseAsync())
 			{
-				var response = await client.GetAsync(robotsUri);
 				if (response.StatusCode == HttpStatusCode.NotFound)
 				{
 					return RobotsFile.AllowAllRobots(baseUri);
@@ -63,8 +56,10 @@ namespace TurnerSoftware.RobotsExclusionTools
 				}
 				else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
 				{
-					var robotsText = await response.Content.ReadAsStringAsync();
-					return FromString(robotsText, baseUri);
+					using (var stream = response.GetResponseStream())
+					{
+						return await FromStreamAsync(stream, baseUri);
+					}
 				}
 			}
 
@@ -73,16 +68,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 
 		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri)
 		{
-			var tokens = new List<Token>();
-			
 			var streamReader = new StreamReader(stream);
-			while (!streamReader.EndOfStream)
-			{
-				var robotsLine = await streamReader.ReadLineAsync();
-				tokens.AddRange(Tokenizer.Tokenize(robotsLine));
-				tokens.Add(Token.NewLineToken);
-			}
-
+			var tokens = await Tokenizer.TokenizeAsync(streamReader);
 			return FromTokens(tokens, baseUri);
 		}
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
@@ -63,6 +65,30 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 				}
 			}
 
+			return tokens;
+		}
+
+		public IEnumerable<Token> Tokenize(TextReader reader)
+		{
+			var tokens = new List<Token>();
+			string line;
+			while ((line = reader.ReadLine()) != null)
+			{
+				tokens.AddRange(Tokenize(line));
+				tokens.Add(Token.NewLineToken);
+			}
+			return tokens;
+		}
+
+		public async Task<IEnumerable<Token>> TokenizeAsync(TextReader reader)
+		{
+			var tokens = new List<Token>();
+			string line;
+			while ((line = await reader.ReadLineAsync()) != null)
+			{
+				tokens.AddRange(Tokenize(line));
+				tokens.Add(Token.NewLineToken);
+			}
 			return tokens;
 		}
 
