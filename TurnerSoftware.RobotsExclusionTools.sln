@@ -17,12 +17,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{969CA4D9-8FB0-4D39-8FEA-ADC663F15205}"
 	ProjectSection(SolutionItems) = preProject
 		.appveyor.yml = .appveyor.yml
+		.codecov.yml = .codecov.yml
 		.editorconfig = .editorconfig
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnerSoftware.RobotsExclusionTools.Benchmarks", "tests\TurnerSoftware.RobotsExclusionTools.Benchmarks\TurnerSoftware.RobotsExclusionTools.Benchmarks.csproj", "{1811806F-6214-4D60-A769-26C3DD8226EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnerSoftware.RobotsExclusionTools.Benchmarks", "tests\TurnerSoftware.RobotsExclusionTools.Benchmarks\TurnerSoftware.RobotsExclusionTools.Benchmarks.csproj", "{1811806F-6214-4D60-A769-26C3DD8226EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
