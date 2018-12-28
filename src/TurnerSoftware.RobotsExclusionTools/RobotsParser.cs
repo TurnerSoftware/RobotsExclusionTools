@@ -14,13 +14,18 @@ namespace TurnerSoftware.RobotsExclusionTools
 		private ITokenPatternValidator PatternValidator { get; }
 		private IRobotsEntryTokenParser TokenParser { get; }
 
-		public RobotsParser() : this(new Tokenizer(), new TokenPatternValidator(), new RobotsEntryTokenParser()) { }
+		private HttpClient HttpClient { get; }
 
-		public RobotsParser(ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsEntryTokenParser tokenParser)
+		public RobotsParser() : this(new HttpClient()) { }
+
+		public RobotsParser(HttpClient client) : this(client, new Tokenizer(), new TokenPatternValidator(), new RobotsEntryTokenParser()) { }
+
+		public RobotsParser(HttpClient client, ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsEntryTokenParser tokenParser)
 		{
-			Tokenizer = tokenizer;
-			PatternValidator = patternValidator;
-			TokenParser = tokenParser;
+			HttpClient = client ?? throw new ArgumentNullException(nameof(client));
+			Tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));
+			PatternValidator = patternValidator ?? throw new ArgumentNullException(nameof(patternValidator));
+			TokenParser = tokenParser ?? throw new ArgumentNullException(nameof(tokenParser));
 		}
 		
 		public RobotsFile FromString(string robotsText, Uri baseUri)
@@ -43,10 +48,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 		{
 			var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
 			robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
-
-			var request = WebRequest.CreateHttp(robotsUri);
-
-			using (var response = (HttpWebResponse)await request.GetResponseAsync())
+			
+			using (var response = await HttpClient.GetAsync(robotsUri))
 			{
 				if (response.StatusCode == HttpStatusCode.NotFound)
 				{
@@ -58,7 +61,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				}
 				else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
 				{
-					using (var stream = response.GetResponseStream())
+					using (var stream = await response.Content.ReadAsStreamAsync())
 					{
 						return await FromStreamAsync(stream, baseUri);
 					}
