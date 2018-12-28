@@ -2,11 +2,25 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests
 {
+	[TestClass]
 	public class TestBase
 	{
+		[AssemblyInitialize]
+		public static void AssemblyInitialize(TestContext context)
+		{
+			TestConfiguration.StartupServer();
+		}
+
+		[AssemblyCleanup]
+		public static void AssemblyCleanup()
+		{
+			TestConfiguration.ShutdownServer();
+		}
+
 		protected string LoadRobotsResource(string name)
 		{
 			return File.ReadAllText($"Resources/{name}");

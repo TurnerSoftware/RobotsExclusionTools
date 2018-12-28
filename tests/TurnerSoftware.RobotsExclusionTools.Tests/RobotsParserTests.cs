@@ -14,7 +14,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public async Task FromUriLoading()
 		{
-			var robotsFile = await new RobotsParser().FromUriAsync(new Uri("https://github.com/robots.txt"));
+			var client = TestConfiguration.GetHttpClient();
+			var robotsFile = await new RobotsParser(client).FromUriAsync(new Uri("https://localhost/robots.txt"));
 			Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
 		}
 
