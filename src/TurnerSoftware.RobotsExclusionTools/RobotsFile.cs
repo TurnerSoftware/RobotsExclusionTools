@@ -50,11 +50,6 @@ namespace TurnerSoftware.RobotsExclusionTools
 				uri = new Uri(BaseUri, uri);
 			}
 
-			if (uri.Host != BaseUri.Host)
-			{
-				return false;
-			}
-
 			var entry = GetEntryForUserAgent(userAgent);
 			var pathComparisonUtility = new PathComparisonUtility();
 			return pathComparisonUtility.IsAllowed(entry, uri);
