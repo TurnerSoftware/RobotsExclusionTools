@@ -91,8 +91,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				};
 			}
 
-			//TODO: Probably throw an exception of some sort (or maybe make it optional to continue on validation failure)
-			return null;
+			return RobotsFile.AllowAllRobots(baseUri);
 		}
 	}
 }
