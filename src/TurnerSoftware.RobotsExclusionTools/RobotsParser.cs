@@ -18,7 +18,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 
 		public RobotsParser() : this(new HttpClient()) { }
 
-		public RobotsParser(HttpClient client) : this(client, new Tokenizer(), new TokenPatternValidator(), new RobotsEntryTokenParser()) { }
+		public RobotsParser(HttpClient client) : this(client, new RobotsFileTokenizer(), new RobotsFileTokenPatternValidator(), new RobotsEntryTokenParser()) { }
 
 		public RobotsParser(HttpClient client, ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsEntryTokenParser tokenParser)
 		{

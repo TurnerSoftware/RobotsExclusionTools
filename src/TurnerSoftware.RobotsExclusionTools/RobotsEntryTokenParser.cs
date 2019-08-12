@@ -37,7 +37,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			//TODO: Refactor the implementation to not be as nasty as it is :(
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
+			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
 			var expectedFields = new[] { "User-agent", "Allow", "Disallow", "Crawl-delay" };
 
 			using (var enumerator = tokens.GetEnumerator())
@@ -117,7 +117,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 		public IEnumerable<SitemapUrlEntry> GetSitemapUrlEntries(IEnumerable<Token> tokens)
 		{
 			var result = new List<SitemapUrlEntry>();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
+			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
 
 			using (var enumerator = tokens.GetEnumerator())
 			{

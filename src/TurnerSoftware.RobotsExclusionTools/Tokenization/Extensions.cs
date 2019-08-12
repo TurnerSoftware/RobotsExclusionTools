@@ -16,6 +16,11 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		{
 			return MoveTo(tokenEnumerator, t => t.TokenType == tokenType && t.Value == tokenValue, t => false);
 		}
+		
+		public static bool MoveTo(this IEnumerator<Token> tokenEnumerator, IEnumerable<TokenType> anyOfTheseTypes)
+		{
+			return MoveTo(tokenEnumerator, t => anyOfTheseTypes.Contains(t.TokenType), t => false);
+		}
 
 		public static bool StepOverTo(this IEnumerator<Token> tokenEnumerator, TokenType tokenType, IEnumerable<TokenType> steppingTokens)
 		{
