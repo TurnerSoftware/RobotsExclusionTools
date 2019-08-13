@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\*.*" />
+    <None Remove="Resources\*\*.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\*.*">
+    <Content Include="Resources\*\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

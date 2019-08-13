@@ -26,7 +26,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void MalformedFieldPatterns()
 		{
-			var robots = LoadRobotsResource("InvalidField-Example.txt");
+			var robots = LoadResource("InvalidField-Example.txt");
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 

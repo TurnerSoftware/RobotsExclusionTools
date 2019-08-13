@@ -21,19 +21,19 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			TestConfiguration.ShutdownServer();
 		}
 
-		protected string LoadRobotsResource(string name)
+		protected string LoadResource(string name)
 		{
 			return File.ReadAllText($"Resources/{name}");
 		}
 
 		protected string LoadRFCExample()
 		{
-			return LoadRobotsResource("NoRobots-RFC-Example.txt");
+			return LoadResource("NoRobots-RFC-Example.txt");
 		}
 
 		protected RobotsFile GetRobotsFile(string name)
 		{
-			var robots = LoadRobotsResource(name);
+			var robots = LoadResource("RobotsFile/" + name);
 			var robotsFile = new RobotsParser().FromString(robots, new Uri("http://www.example.org"));
 			return robotsFile;
 		}
@@ -41,6 +41,13 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		protected RobotsFile GetRFCRobotsFile()
 		{
 			return GetRobotsFile("NoRobots-RFC-Example.txt");
+		}
+		
+		protected RobotsPageDefinition GetRobotsPageDefinition(string name)
+		{
+			var robots = LoadResource("RobotsPage/" + name);
+			var robotsPage = new RobotsPageDefinitionParser().FromRules(robots.Split('\n'));
+			return robotsPage;
 		}
 	}
 }

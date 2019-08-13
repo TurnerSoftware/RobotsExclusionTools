@@ -15,14 +15,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		public async Task FromUriLoading()
 		{
 			var client = TestConfiguration.GetHttpClient();
-			var robotsFile = await new RobotsParser(client).FromUriAsync(new Uri("https://localhost/robots.txt"));
+			var robotsFile = await new RobotsParser(client).FromUriAsync(new Uri("https://localhost/RobotsFile/robots.txt"));
 			Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
 		}
 
 		[TestMethod]
 		public async Task FromStreamLoading()
 		{
-			using (var fileStream = new FileStream("Resources/NoRobots-RFC-Example.txt", FileMode.Open))
+			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
 			{
 				var robotsFile = await new RobotsParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"));
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
