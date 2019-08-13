@@ -28,7 +28,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 
 		protected string LoadRFCExample()
 		{
-			return LoadResource("NoRobots-RFC-Example.txt");
+			return LoadResource("RobotsFile/NoRobots-RFC-Example.txt");
 		}
 
 		protected RobotsFile GetRobotsFile(string name)
