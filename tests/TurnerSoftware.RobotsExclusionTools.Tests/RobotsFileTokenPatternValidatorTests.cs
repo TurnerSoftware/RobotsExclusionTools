@@ -41,18 +41,5 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			Assert.AreEqual(2, firstErrorExpectedTokens.Count());
 			Assert.AreEqual(19, result.Errors.Count());
 		}
-
-		[TestMethod]
-		public void CorrectFieldPatterns()
-		{
-			var robots = LoadRFCExample();
-			var tokenizer = new RobotsFileTokenizer();
-			var tokens = tokenizer.Tokenize(robots);
-
-			var validator = new RobotsFileTokenPatternValidator();
-			var result = validator.Validate(tokens);
-
-			Assert.IsTrue(result.IsValid);
-		}
 	}
 }
