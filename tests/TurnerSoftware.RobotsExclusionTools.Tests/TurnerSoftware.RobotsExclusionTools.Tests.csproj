@@ -1,39 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
 
     <IsPackable>false</IsPackable>
-
-    <RootNamespace>TurnerSoftware.RobotsExclusionTools.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Comprehensive-Example.txt" />
-    <None Remove="Resources\InvalidField-Example.txt" />
-    <None Remove="Resources\NoRobots-RFC-Example.txt" />
-    <None Remove="Resources\NoUserAgentRules-Example.txt" />
-    <None Remove="Resources\robots.txt" />
+    <None Remove="Resources\*.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Comprehensive-Example.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Resources\InvalidField-Example.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Resources\NoRobots-RFC-Example.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Resources\NoUserAgentRules-Example.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Resources\robots.txt">
+    <Content Include="Resources\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="2.2.0" />
