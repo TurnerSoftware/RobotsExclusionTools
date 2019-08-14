@@ -46,7 +46,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		protected RobotsPageDefinition GetRobotsPageDefinition(string name)
 		{
 			var robots = LoadResource("RobotsPage/" + name);
-			var robotsPage = new RobotsPageDefinitionParser().FromRules(robots.Split('\n'));
+			var robotsPage = new RobotsPageParser().FromRules(robots.Split('\n'));
 			return robotsPage;
 		}
 	}

@@ -5,15 +5,15 @@ using TurnerSoftware.RobotsExclusionTools.Tokenization;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
-	public class RobotsPageDefinitionParser : IRobotsPageDefinitionParser
+	public class RobotsPageParser : IRobotsPageDefinitionParser
 	{
 		private ITokenizer Tokenizer { get; }
 		private ITokenPatternValidator PatternValidator { get; }
 		private IRobotsPageEntryTokenParser TokenParser { get; }
 
-		public RobotsPageDefinitionParser() : this(new RobotsPageTokenizer(), new RobotsPageTokenPatternValidator(), new RobotsPageEntryTokenParser()) { }
+		public RobotsPageParser() : this(new RobotsPageTokenizer(), new RobotsPageTokenPatternValidator(), new RobotsPageEntryTokenParser()) { }
 
-		public RobotsPageDefinitionParser(ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsPageEntryTokenParser tokenParser)
+		public RobotsPageParser(ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsPageEntryTokenParser tokenParser)
 		{
 			Tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));
 			PatternValidator = patternValidator ?? throw new ArgumentNullException(nameof(patternValidator));
