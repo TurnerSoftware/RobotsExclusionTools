@@ -13,8 +13,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		public void RobotsFileAlwaysAllowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
-			var comparisonUtility = new PathComparisonUtility();
-
 			var requestUri = new Uri("http://www.example.org/robots.txt");
 
 			Assert.IsTrue(robotsFile.IsAllowedAccess(requestUri, "Unhipbot/2.5"));
@@ -37,8 +35,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		public void UnhipbotCrawlerDisallowed()
 		{
 			var robotsFile = GetRFCRobotsFile();
-			var comparisonUtility = new PathComparisonUtility();
-
 			var userAgent = "Unhipbot/1.0";
 
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
