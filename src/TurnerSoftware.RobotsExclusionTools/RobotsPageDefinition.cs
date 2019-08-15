@@ -11,28 +11,35 @@ namespace TurnerSoftware.RobotsExclusionTools
 		
 		public bool CanIndex(string userAgent)
 		{
-			var entry = GetEntryForUserAgent(userAgent);
-			if (entry != null)
-			{
-				var disallowIndex = entry.Rules.Any(r =>
-					r.RuleName.Equals("noindex", StringComparison.InvariantCultureIgnoreCase) ||
-					r.RuleName.Equals("none", StringComparison.InvariantCultureIgnoreCase)
-				);
-				return !disallowIndex;
-			}
-			return true;
+			return Can("index", userAgent);
 		}
 		
 		public bool CanFollowLinks(string userAgent)
 		{
+			return Can("follow", userAgent);
+		}
+		
+		public bool Can(string ruleName, string userAgent)
+		{
+			var negatedRule = "no" + ruleName;
 			var entry = GetEntryForUserAgent(userAgent);
 			if (entry != null)
 			{
-				var disallowFollow = entry.Rules.Any(r =>
-					r.RuleName.Equals("nofollow", StringComparison.InvariantCultureIgnoreCase) ||
-					r.RuleName.Equals("none", StringComparison.InvariantCultureIgnoreCase)
-				);
-				return !disallowFollow;
+				var items = entry.Rules.ToArray();
+				
+				//Going through the array backwards gives priority to more specific values (useragent values over global values)
+				for (var i = items.Length - 1; i >= 0; i--)
+				{
+					var rule = items[i];
+					if (rule.RuleName.Equals("all", StringComparison.InvariantCultureIgnoreCase))
+					{
+						return true;
+					}
+					else if (rule.RuleName.Equals(negatedRule, StringComparison.InvariantCultureIgnoreCase))
+					{
+						return false;
+					}
+				}
 			}
 			return true;
 		}
@@ -48,7 +55,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 					globalEntry = pageAccessEntry;
 				}
 
-				if (userAgent.IndexOf(pageAccessEntry.UserAgent) != -1)
+				if (userAgent.IndexOf(pageAccessEntry.UserAgent, StringComparison.InvariantCultureIgnoreCase) != -1)
 				{
 					return pageAccessEntry;
 				}
