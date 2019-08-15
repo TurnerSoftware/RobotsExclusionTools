@@ -13,11 +13,15 @@ Allow: /orgs
 Disallow: /
 
 User-agent: ExplicitWildcardSuffix
-Allow: /org*/plan.html
+Allow: /org*
 Disallow: /
 
 User-agent: ExplicitWildcardPrefix
 Allow: *.html
+Disallow: /
+
+User-agent: ContainedWildcard
+Allow: /org*/plan.html
 Disallow: /
 
 User-agent: PathWithAnyQueryString
@@ -25,6 +29,9 @@ Disallow: /org/plan.html?
 
 User-agent: PathWithPartQueryString
 Disallow: /org/plan.html?foo=bar*
+
+User-agent: PathMustStartWith
+Disallow: /org/plan.html
 
 User-agent: PathMustEndWith
 Disallow: /org/plan.html$

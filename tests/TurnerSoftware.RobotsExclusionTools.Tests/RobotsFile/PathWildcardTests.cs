@@ -15,7 +15,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			var userAgent = "ExplicitWildcardSuffix";
 
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
 		}
@@ -32,6 +32,18 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.jpg"), userAgent));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/plan.html"), userAgent));
+		}
+		
+		[TestMethod]
+		public void ContainedWildcard()
+		{
+			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
+			var userAgent = "ContainedWildcard";
+
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
 		}
 
 		[TestMethod]
@@ -58,6 +70,17 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar"), userAgent));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar&abc=123"), userAgent));
+		}
+
+		[TestMethod]
+		public void PathMustStartWith()
+		{
+			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
+			var userAgent = "PathMustStartWith";
+
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/about/org/plan.html"), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
 		}
 
 		[TestMethod]
