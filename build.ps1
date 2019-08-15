@@ -26,7 +26,7 @@ Write-Host "Solution built!" -ForegroundColor "Green"
 
 if ($RunTests -And -Not $CheckCoverage) {
     Write-Host "Running tests without coverage..." -ForegroundColor "Magenta"
-	dotnet test tests/InfinityCrawler.Tests/InfinityCrawler.Tests.csproj
+	dotnet test tests/TurnerSoftware.RobotsExclusionTools.Tests/TurnerSoftware.RobotsExclusionTools.Tests.csproj
 	if ($LastExitCode -ne 0) {
         Write-Host "Tests failed, aborting build!" -Foreground "Red"
         Exit 1
