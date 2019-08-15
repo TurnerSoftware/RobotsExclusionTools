@@ -40,7 +40,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 
 		public bool PathMatch(string sourceRecord, string uriPath, StringComparison comparison)
 		{
-			var sourcePieces = sourceRecord.Split(new[] { '*' }).ToArray();
+			var sourcePieces = sourceRecord.Split(new[] { '*' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 			var lastPiece = sourcePieces.LastOrDefault();
 			var mustMatchToEnd = false;
 			var mustMatchToStart = true;
