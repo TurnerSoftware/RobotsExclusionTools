@@ -31,6 +31,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					new SiteAccessEntry
 					{
+						UserAgents = new[] { "*" },
 						PathRules = new []
 						{
 							new SiteAccessPathRule
