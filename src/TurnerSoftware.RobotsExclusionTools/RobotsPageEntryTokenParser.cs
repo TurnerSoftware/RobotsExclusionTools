@@ -60,6 +60,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 						}
 					}
 				}
+
+				processedStates.Add(parseState);
 			}
 			
 			PageAccessRule[] ConvertToRules(IEnumerable<PageAccessParseState> userAgentStates)
