@@ -53,6 +53,23 @@ namespace TurnerSoftware.RobotsExclusionTools
 					}
 				}
 			}
+			
+			PageAccessRule[] ConvertToRules(IEnumerable<PageAccessParseState> userAgentStates)
+			{
+				return userAgentStates.SelectMany(s => s.Values.Select(v => new PageAccessRule
+				{
+					//Everything is a field (noindex, nofollow etc)
+					RuleName = s.Field ?? v,
+					//Only "unavailable_after" has a value
+					RuleValue = s.Field == null ? null : v
+				}))
+				//Squish multiple of the same-name rules together
+				.GroupBy(r => r.RuleName, StringComparer.InvariantCultureIgnoreCase)
+				.Select(rg => rg.LastOrDefault())
+				.ToArray();
+			}
+
+			var globalRules = processedStates.Where(s => s.UserAgent == null).ToArray();
 
 			var result = processedStates
 				//Merge variations of User Agent definitions (case insensitive)
@@ -61,16 +78,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 					new PageAccessEntry
 					{
 						UserAgent = g.Key ?? "*",
-						Rules = g.SelectMany(s => s.Values.Select(v => new PageAccessRule
-						{
-							//Everything is a field (noindex, nofollow etc)
-							RuleName = s.Field ?? v,
-							//Only "unavailable_after" has a value
-							RuleValue = s.Field == null ? null : v
-						}))
-						//Squish multiple of the same-name rules together
-						.GroupBy(r => r.RuleName, StringComparer.InvariantCultureIgnoreCase)
-						.Select(rg => rg.LastOrDefault())
+						Rules = ConvertToRules(g.Key == null ? g : globalRules.Concat(g))
 					}
 				).ToArray();
 
