@@ -31,14 +31,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			return LoadResource("RobotsFile/NoRobots-RFC-Example.txt");
 		}
 
-		protected RobotsFile GetRobotsFile(string name)
+		protected RobotsExclusionTools.RobotsFile GetRobotsFile(string name)
 		{
 			var robots = LoadResource("RobotsFile/" + name);
 			var robotsFile = new RobotsFileParser().FromString(robots, new Uri("http://www.example.org"));
 			return robotsFile;
 		}
 
-		protected RobotsFile GetRfcRobotsFile()
+		protected RobotsExclusionTools.RobotsFile GetRfcRobotsFile()
 		{
 			return GetRobotsFile("NoRobots-RFC-Example.txt");
 		}
