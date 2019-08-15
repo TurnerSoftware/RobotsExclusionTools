@@ -38,7 +38,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 					}
 					else if (current.TokenType == TokenType.Field)
 					{
-						if (current.Value.IndexOf("unavailable_after", StringComparison.InvariantCultureIgnoreCase) == 0)
+						if (current.Value.Equals("unavailable_after", StringComparison.InvariantCultureIgnoreCase))
 						{
 							parseState.Field = current.Value;
 						}
@@ -49,7 +49,15 @@ namespace TurnerSoftware.RobotsExclusionTools
 					}
 					else
 					{
-						parseState.Values.Add(current.Value);
+						if (current.Value.Equals("none", StringComparison.InvariantCultureIgnoreCase))
+						{
+							parseState.Values.Add("nofollow");
+							parseState.Values.Add("noindex");
+						}
+						else
+						{
+							parseState.Values.Add(current.Value);
+						}
 					}
 				}
 			}
