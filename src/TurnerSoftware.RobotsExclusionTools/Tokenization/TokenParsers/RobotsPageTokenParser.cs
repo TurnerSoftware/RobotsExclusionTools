@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 {
 	/// <summary>
 	/// Based on the rules defined by Google's documentation for Robots Meta Tag
 	/// https://developers.google.com/search/reference/robots_meta_tag
 	/// </summary>
-	public class RobotsPageEntryTokenParser : IRobotsPageEntryTokenParser
+	public class RobotsPageTokenParser : IRobotsPageTokenParser
 	{
 		private class PageAccessParseState
 		{

@@ -1,11 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TurnerSoftware.RobotsExclusionTools.Tokenization;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Validators;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 {
 	[TestClass]
 	public class RobotsPageTokenPatternValidatorTests : TestBase

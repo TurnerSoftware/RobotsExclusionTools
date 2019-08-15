@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 {
 	[TestClass]
-	public class RobotsPageEntryTokenParserTests : TestBase
+	public class RobotsPageTokenParserTests : TestBase
 	{
 		[TestMethod]
 		public void SplitRuleNoneToNoIndexAndNoFollow()
 		{
-			var parser = new RobotsPageEntryTokenParser();
+			var parser = new RobotsPageTokenParser();
 			var tokens = new[]
 			{
 				new Token(TokenType.Value, "none"),
@@ -23,7 +21,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 				new Token(TokenType.FieldValueDelimiter, null),
 				new Token(TokenType.Value, "none")
 			};
-			
+
 			var entries = parser.GetPageAccessEntries(tokens);
 
 			Assert.AreEqual(2, entries.Count());
@@ -32,17 +30,17 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			Assert.IsFalse(globalRule.Rules.Any(r => r.RuleName == "none"));
 			Assert.IsTrue(globalRule.Rules.Any(r => r.RuleName == "noindex"));
 			Assert.IsTrue(globalRule.Rules.Any(r => r.RuleName == "nofollow"));
-			
+
 			var agentRule = entries.First(e => e.UserAgent == "otherbot");
 			Assert.IsFalse(agentRule.Rules.Any(r => r.RuleName == "none"));
 			Assert.IsTrue(agentRule.Rules.Any(r => r.RuleName == "noindex"));
 			Assert.IsTrue(agentRule.Rules.Any(r => r.RuleName == "nofollow"));
 		}
-		
+
 		[TestMethod]
 		public void UnavailableAfterRuleIsParsed()
 		{
-			var parser = new RobotsPageEntryTokenParser();
+			var parser = new RobotsPageTokenParser();
 			var tokens = new[]
 			{
 				new Token(TokenType.Field, "unavailable_after"),
@@ -61,7 +59,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void MultiValueParsing()
 		{
-			var parser = new RobotsPageEntryTokenParser();
+			var parser = new RobotsPageTokenParser();
 			var tokens = new[]
 			{
 				new Token(TokenType.Value, "outerValue1"),
@@ -87,11 +85,11 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			Assert.IsTrue(agentRule.Rules.Any(r => r.RuleName == "innerValue1"));
 			Assert.IsTrue(agentRule.Rules.Any(r => r.RuleName == "innerValue2"));
 		}
-		
+
 		[TestMethod]
 		public void GlobalRulesInAgentRulesList()
 		{
-			var parser = new RobotsPageEntryTokenParser();
+			var parser = new RobotsPageTokenParser();
 			var tokens = new[]
 			{
 				new Token(TokenType.Value, "outerValue"),
@@ -118,15 +116,15 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 				Index = indexPosition,
 				Entry = entry
 			});
-			var outerRule = ruleIndexes.First(r => r.Entry.RuleName == "outerValue");
-			var innerRule = ruleIndexes.First(r => r.Entry.RuleName == "innerValue");
+			_ = ruleIndexes.First(r => r.Entry.RuleName == "outerValue");
+			_ = ruleIndexes.First(r => r.Entry.RuleName == "innerValue");
 		}
 
 
 		[TestMethod]
 		public void GlobalRulesBeforeAgentSpecificRules()
 		{
-			var parser = new RobotsPageEntryTokenParser();
+			var parser = new RobotsPageTokenParser();
 			var tokens = new[]
 			{
 				new Token(TokenType.Value, "outerValue"),

@@ -1,9 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
 using System.IO;
 using System.Linq;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class RobotsFileTokenizationTests : TestBase
@@ -11,7 +12,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCFieldTokenization()
 		{
-			var robots = LoadRFCExample();
+			var robots = LoadRobotsRfcFileExample();
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
@@ -26,7 +27,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCValueTokenization()
 		{
-			var robots = LoadRFCExample();
+			var robots = LoadRobotsRfcFileExample();
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
@@ -40,7 +41,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCCommentTokenization()
 		{
-			var robots = LoadRFCExample();
+			var robots = LoadRobotsRfcFileExample();
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 

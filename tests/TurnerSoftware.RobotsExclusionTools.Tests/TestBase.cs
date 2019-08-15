@@ -26,7 +26,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 			return File.ReadAllText($"Resources/{name}");
 		}
 
-		protected string LoadRFCExample()
+		protected string LoadRobotsRfcFileExample()
 		{
 			return LoadResource("RobotsFile/NoRobots-RFC-Example.txt");
 		}
@@ -34,11 +34,11 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		protected RobotsFile GetRobotsFile(string name)
 		{
 			var robots = LoadResource("RobotsFile/" + name);
-			var robotsFile = new RobotsParser().FromString(robots, new Uri("http://www.example.org"));
+			var robotsFile = new RobotsFileParser().FromString(robots, new Uri("http://www.example.org"));
 			return robotsFile;
 		}
 
-		protected RobotsFile GetRFCRobotsFile()
+		protected RobotsFile GetRfcRobotsFile()
 		{
 			return GetRobotsFile("NoRobots-RFC-Example.txt");
 		}

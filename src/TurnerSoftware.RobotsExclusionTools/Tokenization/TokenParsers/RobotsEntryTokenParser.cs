@@ -1,12 +1,11 @@
-﻿using TurnerSoftware.RobotsExclusionTools.Tokenization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 {
-	public class RobotsEntryTokenParser : IRobotsEntryTokenParser
+	public class RobotsEntryTokenParser : IRobotsFileTokenParser
 	{
 		private class SiteAccessParseState
 		{

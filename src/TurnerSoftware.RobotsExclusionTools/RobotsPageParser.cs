@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Validators;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
@@ -9,11 +12,11 @@ namespace TurnerSoftware.RobotsExclusionTools
 	{
 		private ITokenizer Tokenizer { get; }
 		private ITokenPatternValidator PatternValidator { get; }
-		private IRobotsPageEntryTokenParser TokenParser { get; }
+		private IRobotsPageTokenParser TokenParser { get; }
 
-		public RobotsPageParser() : this(new RobotsPageTokenizer(), new RobotsPageTokenPatternValidator(), new RobotsPageEntryTokenParser()) { }
+		public RobotsPageParser() : this(new RobotsPageTokenizer(), new RobotsPageTokenPatternValidator(), new RobotsPageTokenParser()) { }
 
-		public RobotsPageParser(ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsPageEntryTokenParser tokenParser)
+		public RobotsPageParser(ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsPageTokenParser tokenParser)
 		{
 			Tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));
 			PatternValidator = patternValidator ?? throw new ArgumentNullException(nameof(patternValidator));

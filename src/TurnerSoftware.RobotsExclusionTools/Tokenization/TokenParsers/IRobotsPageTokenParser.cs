@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 {
-	public interface IRobotsPageEntryTokenParser
+	public interface IRobotsPageTokenParser
 	{
 		IEnumerable<PageAccessEntry> GetPageAccessEntries(IEnumerable<Token> tokens);
 	}

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tokenization
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers
 {
 	public class RobotsPageTokenizer : TokenizerBase
 	{

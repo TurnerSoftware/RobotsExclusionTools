@@ -1,11 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class RobotsFileTokenPatternValidatorTests : TestBase
@@ -13,7 +15,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCValidPatterns()
 		{
-			var robots = LoadRFCExample();
+			var robots = LoadRobotsRfcFileExample();
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 

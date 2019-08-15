@@ -12,7 +12,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 	[MemoryDiagnoser]
 	public class StreamingVsStringTokenization
 	{
-		private RobotsParser Parser { get; }
+		private RobotsFileParser Parser { get; }
 		private Uri Uri { get; }
 
 		private MemoryStream MemoryStream { get; }
@@ -20,7 +20,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 
 		public StreamingVsStringTokenization()
 		{
-			Parser = new RobotsParser();
+			Parser = new RobotsFileParser();
 			Uri = new Uri("https://www.google.com");
 
 			MemoryStream = new MemoryStream();
