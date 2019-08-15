@@ -1,18 +1,19 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
 using System.IO;
 using System.Linq;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
-	public class TokenizationTests : TestBase
+	public class RobotsFileTokenizationTests : TestBase
 	{
 		[TestMethod]
 		public void RFCFieldTokenization()
 		{
-			var robots = LoadRFCExample();
-			var tokenizer = new Tokenizer();
+			var robots = LoadRobotsRfcFileExample();
+			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
 			var fieldTokens = tokens.Where(t => t.TokenType == TokenType.Field);
@@ -26,8 +27,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCValueTokenization()
 		{
-			var robots = LoadRFCExample();
-			var tokenizer = new Tokenizer();
+			var robots = LoadRobotsRfcFileExample();
+			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
 			var valueTokens = tokens.Where(t => t.TokenType == TokenType.Value);
@@ -40,8 +41,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RFCCommentTokenization()
 		{
-			var robots = LoadRFCExample();
-			var tokenizer = new Tokenizer();
+			var robots = LoadRobotsRfcFileExample();
+			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
 			var commentTokens = tokens.Where(t => t.TokenType == TokenType.Comment);
@@ -54,8 +55,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void InvalidFields()
 		{
-			var robots = LoadRobotsResource("InvalidField-Example.txt");
-			var tokenizer = new Tokenizer();
+			var robots = LoadResource("RobotsFile/InvalidField-Example.txt");
+			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
 			var fieldTokens = tokens.Where(t => t.TokenType == TokenType.Field);

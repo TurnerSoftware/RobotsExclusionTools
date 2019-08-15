@@ -10,7 +10,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		Field,
 		Value,
 		Comment,
-		FieldValueDeliminter,
-		NewLine
+		FieldValueDelimiter,
+		NewLine,
+		ValueDelimiter
 	}
 }

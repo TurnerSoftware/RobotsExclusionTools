@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class RFCSpecificTests : TestBase
@@ -12,9 +11,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void RobotsFileAlwaysAllowed()
 		{
-			var robotsFile = GetRFCRobotsFile();
-			var comparisonUtility = new PathComparisonUtility();
-
+			var robotsFile = GetRfcRobotsFile();
 			var requestUri = new Uri("http://www.example.org/robots.txt");
 
 			Assert.IsTrue(robotsFile.IsAllowedAccess(requestUri, "Unhipbot/2.5"));
@@ -36,9 +33,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void UnhipbotCrawlerDisallowed()
 		{
-			var robotsFile = GetRFCRobotsFile();
-			var comparisonUtility = new PathComparisonUtility();
-
+			var robotsFile = GetRfcRobotsFile();
 			var userAgent = "Unhipbot/1.0";
 
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
@@ -56,7 +51,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void ExciteCrawlerAllowed()
 		{
-			var robotsFile = GetRFCRobotsFile();
+			var robotsFile = GetRfcRobotsFile();
 			var userAgent = "Excite/1.0";
 
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
@@ -74,7 +69,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void WebcrawlerAllowed()
 		{
-			var robotsFile = GetRFCRobotsFile();
+			var robotsFile = GetRfcRobotsFile();
 			var userAgent = "Webcrawler/1.0";
 
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
@@ -92,7 +87,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		[TestMethod]
 		public void OtherPartiallyAllowed()
 		{
-			var robotsFile = GetRFCRobotsFile();
+			var robotsFile = GetRfcRobotsFile();
 			var userAgent = "SuperSpecialCrawler/1.0";
 
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));

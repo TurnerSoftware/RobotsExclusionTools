@@ -1,0 +1,6 @@
+﻿googlebot: nofollow
+otherbot: nofollow, noindex
+somebot: none
+googlebot: notranslate
+noarchive
+unavailable_after: 25 Jun 2010 15:00:00 PST

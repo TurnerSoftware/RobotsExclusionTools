@@ -1,4 +1,7 @@
 ﻿using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers;
+using TurnerSoftware.RobotsExclusionTools.Tokenization.Validators;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,19 +11,19 @@ using System.Net;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
-	public class RobotsParser : IRobotsParser
+	public class RobotsFileParser : IRobotsFileParser
 	{
 		private ITokenizer Tokenizer { get; }
 		private ITokenPatternValidator PatternValidator { get; }
-		private IRobotsEntryTokenParser TokenParser { get; }
+		private IRobotsFileTokenParser TokenParser { get; }
 
 		private HttpClient HttpClient { get; }
 
-		public RobotsParser() : this(new HttpClient()) { }
+		public RobotsFileParser() : this(new HttpClient()) { }
 
-		public RobotsParser(HttpClient client) : this(client, new Tokenizer(), new TokenPatternValidator(), new RobotsEntryTokenParser()) { }
+		public RobotsFileParser(HttpClient client) : this(client, new RobotsFileTokenizer(), new RobotsFileTokenPatternValidator(), new RobotsEntryTokenParser()) { }
 
-		public RobotsParser(HttpClient client, ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsEntryTokenParser tokenParser)
+		public RobotsFileParser(HttpClient client, ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsFileTokenParser tokenParser)
 		{
 			HttpClient = client ?? throw new ArgumentNullException(nameof(client));
 			Tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));

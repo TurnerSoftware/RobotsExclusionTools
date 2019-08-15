@@ -1,12 +1,11 @@
-﻿using TurnerSoftware.RobotsExclusionTools.Tokenization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 {
-	public class RobotsEntryTokenParser : IRobotsEntryTokenParser
+	public class RobotsEntryTokenParser : IRobotsFileTokenParser
 	{
 		private class SiteAccessParseState
 		{
@@ -37,7 +36,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			//TODO: Refactor the implementation to not be as nasty as it is :(
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
+			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
 			var expectedFields = new[] { "User-agent", "Allow", "Disallow", "Crawl-delay" };
 
 			using (var enumerator = tokens.GetEnumerator())
@@ -117,7 +116,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 		public IEnumerable<SitemapUrlEntry> GetSitemapUrlEntries(IEnumerable<Token> tokens)
 		{
 			var result = new List<SitemapUrlEntry>();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDeliminter };
+			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
 
 			using (var enumerator = tokens.GetEnumerator())
 			{

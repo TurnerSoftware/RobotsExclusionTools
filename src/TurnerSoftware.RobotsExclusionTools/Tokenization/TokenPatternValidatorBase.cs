@@ -5,15 +5,9 @@ using System.Text;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 {
-	public class TokenPatternValidator : ITokenPatternValidator
+	public abstract class TokenPatternValidatorBase : ITokenPatternValidator
 	{
-		private static readonly Dictionary<TokenType, TokenPattern> TokenPattern = new Dictionary<TokenType, TokenPattern>
-		{
-			{ TokenType.Comment, new TokenPattern(TokenType.Comment, null, new [] { TokenType.NewLine }) },
-			{ TokenType.Field, new TokenPattern(TokenType.Field, new[]{ TokenType.NewLine }, new [] { TokenType.FieldValueDeliminter }) },
-			{ TokenType.Value, new TokenPattern(TokenType.Value, new[]{ TokenType.FieldValueDeliminter, TokenType.Field }, null) },
-			{ TokenType.FieldValueDeliminter, new TokenPattern(TokenType.FieldValueDeliminter, new[] { TokenType.Field }, null) }
-		};
+		protected abstract IEnumerable<TokenPattern> LookupTokenPatterns(TokenType tokenType);
 
 		public TokenValidationResult Validate(IEnumerable<Token> tokens)
 		{
@@ -45,28 +39,42 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 
 			return new TokenValidationResult(errors);
 		}
-
+		
 		private TokenValidationError ValidateToken(int lineNumber, TokenType tokenType, Stack<TokenType> preceeding, Queue<TokenType> succeeding)
 		{
-			if (!TokenPattern.ContainsKey(tokenType))
+			var tokenPatterns = LookupTokenPatterns(tokenType);
+
+			TokenValidationError lastError = null;
+			
+			foreach (var tokenPattern in tokenPatterns)
 			{
-				return null;
+				var tokenPatternError = ValidateTokenPattern(lineNumber, tokenPattern, preceeding, succeeding);
+				if (tokenPatternError == null)
+				{
+					return null;
+				}
+
+				lastError = tokenPatternError;
 			}
 
-			var pattern = TokenPattern[tokenType];
-			if (pattern.Preceeding.Length > 0)
+			return lastError;
+		}
+
+		private TokenValidationError ValidateTokenPattern(int lineNumber, TokenPattern tokenPattern, Stack<TokenType> preceeding, Queue<TokenType> succeeding)
+		{
+			if (tokenPattern.Preceeding.Length > 0)
 			{
-				if (!PatternMatch(pattern.Preceeding, preceeding))
+				if (!PatternMatch(tokenPattern.Preceeding, preceeding))
 				{
-					return new TokenValidationError(lineNumber, $"Proceeding tokens did not match the pattern for token {tokenType}", pattern.Preceeding, preceeding);
+					return new TokenValidationError(lineNumber, $"Preceeding tokens did not match the pattern for token {tokenPattern.Token}", tokenPattern.Preceeding, preceeding);
 				}
 			}
-			
-			if (pattern.Succeeding.Length > 0)
+
+			if (tokenPattern.Succeeding.Length > 0)
 			{
-				if (!PatternMatch(pattern.Succeeding, succeeding))
+				if (!PatternMatch(tokenPattern.Succeeding, succeeding))
 				{
-					return new TokenValidationError(lineNumber, $"Succeeding tokens did not match the pattern for token {tokenType}", pattern.Succeeding, succeeding);
+					return new TokenValidationError(lineNumber, $"Succeeding tokens did not match the pattern for token {tokenPattern.Token}", tokenPattern.Succeeding, succeeding);
 				}
 			}
 

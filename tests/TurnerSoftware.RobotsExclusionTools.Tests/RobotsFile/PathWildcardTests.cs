@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class PathWildcardTests : TestBase

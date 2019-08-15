@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TurnerSoftware.RobotsExclusionTools.Tests;
 
-namespace TurnerSoftware.RobotsExclusionTools.Tests
+namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class CustomFieldTests : TestBase

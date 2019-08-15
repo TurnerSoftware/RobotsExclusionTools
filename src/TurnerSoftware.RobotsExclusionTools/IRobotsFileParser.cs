@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
-	public interface IRobotsParser
+	public interface IRobotsFileParser
 	{
 		RobotsFile FromString(string robotsText, Uri baseUri);
 		Task<RobotsFile> FromUriAsync(Uri robotsUri);
