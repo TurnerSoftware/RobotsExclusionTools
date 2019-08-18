@@ -1,0 +1,4 @@
+{
+  "TestProject": "tests/TurnerSoftware.RobotsExclusionTools.Tests/TurnerSoftware.RobotsExclusionTools.Tests.csproj",
+  "TestCoverageFilter": "+[TurnerSoftware.RobotsExclusionTools]* -[TurnerSoftware.RobotsExclusionTools.Tests]*"
+}

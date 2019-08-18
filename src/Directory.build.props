@@ -1,13 +1,6 @@
 <Project>
-
+  
   <PropertyGroup>
-    <BuildNumber Condition="'$(APPVEYOR_BUILD_NUMBER)' != ''">$(APPVEYOR_BUILD_NUMBER)</BuildNumber>
-    <BuildNumber Condition="'$(APPVEYOR_BUILD_NUMBER)' == ''">0</BuildNumber>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <VersionPrefix>0.3.0+$(BuildNumber)</VersionPrefix>
-
     <RootNamespace>TurnerSoftware.RobotsExclusionTools</RootNamespace>
 
     <Company>Turner Software</Company>
