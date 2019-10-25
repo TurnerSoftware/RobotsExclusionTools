@@ -5,10 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 {
-	[CoreJob, ClrJob(baseline: true)]
+	[SimpleJob(RuntimeMoniker.NetCoreApp21), SimpleJob(RuntimeMoniker.Net461, baseline: true)]
 	[MemoryDiagnoser]
 	public class StreamingVsStringTokenization
 	{
