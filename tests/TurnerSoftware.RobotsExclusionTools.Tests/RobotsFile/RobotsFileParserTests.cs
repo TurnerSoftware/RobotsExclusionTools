@@ -5,18 +5,78 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TurnerSoftware.RobotsExclusionTools.Tests.TestSite;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class RobotsFileParserTests : TestBase
 	{
-		[TestMethod]
-		public async Task FromUriLoading()
+		private TestSiteManager GetRobotsSiteManager(int statusCode)
 		{
-			var client = TestConfiguration.GetHttpClient();
-			var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
-			Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
+			return new TestSiteManager(new SiteContext { StatusCode = statusCode });
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_200_OK_PerFileRules()
+		{
+			using (var siteManager = GetRobotsSiteManager(200))
+			{
+				var client = siteManager.GetHttpClient();
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
+					s.UserAgents.Contains("MyCustom-UserAgent") && 
+					s.PathRules.Any(p => string.IsNullOrEmpty(p.Path) && p.RuleType == PathRuleType.Disallow)
+				));
+			}
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_404_NotFound_AllowAll()
+		{
+			using (var siteManager = GetRobotsSiteManager(404))
+			{
+				var client = siteManager.GetHttpClient();
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				Assert.IsFalse(robotsFile.SiteAccessEntries.Any());
+			}
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_401_Unauthorized_DenyAll()
+		{
+			using (var siteManager = GetRobotsSiteManager(401))
+			{
+				var client = siteManager.GetHttpClient();
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
+					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
+				));
+			}
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_403_Forbidden_DenyAll()
+		{
+			using (var siteManager = GetRobotsSiteManager(403))
+			{
+				var client = siteManager.GetHttpClient();
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
+					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
+				));
+			}
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_OtherHttpStatus_AllowAll()
+		{
+			using (var siteManager = GetRobotsSiteManager(418))
+			{
+				var client = siteManager.GetHttpClient();
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				Assert.IsFalse(robotsFile.SiteAccessEntries.Any());
+			}
 		}
 
 		[TestMethod]

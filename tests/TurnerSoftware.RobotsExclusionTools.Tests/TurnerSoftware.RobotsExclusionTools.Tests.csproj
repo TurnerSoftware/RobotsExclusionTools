@@ -15,15 +15,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Resources\robots.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\robots.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
@@ -35,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TurnerSoftware.RobotsExclusionTools\TurnerSoftware.RobotsExclusionTools.csproj" />
+    <ProjectReference Include="..\TurnerSoftware.RobotsExclusionTools.Tests.TestSite\TurnerSoftware.RobotsExclusionTools.Tests.TestSite.csproj" />
   </ItemGroup>
 
 </Project>
