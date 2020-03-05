@@ -1,4 +1,4 @@
 ﻿# This file is used by the Test Server
 # This allows testing loading by URI
-User-agent: *
+User-agent: MyCustom-UserAgent
 Disallow: 

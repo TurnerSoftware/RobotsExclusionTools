@@ -9,18 +9,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 	[TestClass]
 	public class TestBase
 	{
-		[AssemblyInitialize]
-		public static void AssemblyInitialize(TestContext context)
-		{
-			TestConfiguration.StartupServer();
-		}
-
-		[AssemblyCleanup]
-		public static void AssemblyCleanup()
-		{
-			TestConfiguration.ShutdownServer();
-		}
-
 		protected string LoadResource(string name)
 		{
 			return File.ReadAllText($"Resources/{name}");
