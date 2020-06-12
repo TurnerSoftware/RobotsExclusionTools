@@ -58,10 +58,6 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					return RobotsFile.AllowAllRobots(baseUri);
 				}
-				else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					return RobotsFile.DenyAllRobots(baseUri);
-				}
 				else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
 				{
 					using (var stream = await response.Content.ReadAsStreamAsync())
