@@ -37,45 +37,45 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
 			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
-			var expectedFields = new[] { "User-agent", "Allow", "Disallow", "Crawl-delay" };
+			var expectedFields = new[] { "user-agent", "allow", "disallow", "crawl-delay" };
 
 			using (var enumerator = tokens.GetEnumerator())
 			{
 				var lastFieldValue = string.Empty;
 				while (enumerator.MoveTo(TokenType.Field))
 				{
-					var fieldCurrent = enumerator.Current;
+					var fieldCurrent = enumerator.Current.Value.ToLowerInvariant();
 
-					if (!expectedFields.Contains(fieldCurrent.Value))
+					if (!expectedFields.Contains(fieldCurrent))
 					{
 						continue;
 					}
 
 					//Reset the state when we have encountered a new "User-agent" field not immediately after another
-					if (lastFieldValue != string.Empty && lastFieldValue != "User-agent" && fieldCurrent.Value == "User-agent")
+					if (lastFieldValue != string.Empty && lastFieldValue != "user-agent" && fieldCurrent == "user-agent")
 					{
 						result.Add(parseState.AsEntry());
 						parseState.Reset();
 					}
 					
 					//When we have seen a field for the first time that isn't a User-agent, default to all User-agents
-					if (lastFieldValue == string.Empty && fieldCurrent.Value != "User-agent")
+					if (lastFieldValue == string.Empty && fieldCurrent != "user-agent")
 					{
 						parseState.UserAgents.Add("*");
 					}
 
-					lastFieldValue = fieldCurrent.Value;
+					lastFieldValue = fieldCurrent;
 
-					if (fieldCurrent.Value == "User-agent")
+					if (fieldCurrent == "user-agent")
 					{
 						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
 						{
 							parseState.UserAgents.Add(enumerator.Current.Value);
 						}
 					}
-					else if (fieldCurrent.Value == "Allow" || fieldCurrent.Value == "Disallow")
+					else if (fieldCurrent == "allow" || fieldCurrent == "disallow")
 					{
-						var pathRule = fieldCurrent.Value == "Disallow" ? PathRuleType.Disallow : PathRuleType.Allow;
+						var pathRule = fieldCurrent == "disallow" ? PathRuleType.Disallow : PathRuleType.Allow;
 						var pathValue = string.Empty;
 
 						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
@@ -95,7 +95,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 							Path = pathValue
 						});
 					}
-					else if (fieldCurrent.Value == "Crawl-delay")
+					else if (fieldCurrent == "crawl-delay")
 					{
 						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
 						{
