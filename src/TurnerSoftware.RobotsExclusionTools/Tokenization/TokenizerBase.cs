@@ -17,23 +17,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		public IEnumerable<Token> Tokenize(string text)
 		{
 			var tokens = new List<Token>();
-			var offset = 0;
-			var numberOfChars = text.Length;
-
-			while (offset < numberOfChars)
-			{
-				var match = FindMatch(text, offset);
-				if (match.IsMatch)
-				{
-					tokens.Add(new Token(match.TokenType, match.Value));
-					offset += match.MatchLength;
-				}
-				else
-				{
-					offset++;
-				}
-			}
-
+			Tokenize(text, tokens);
 			return tokens;
 		}
 
@@ -43,7 +27,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			string line;
 			while ((line = reader.ReadLine()) != null)
 			{
-				tokens.AddRange(Tokenize(line));
+				Tokenize(line, tokens);
 				tokens.Add(Token.NewLineToken);
 			}
 			return tokens;
@@ -55,10 +39,30 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			string line;
 			while ((line = await reader.ReadLineAsync()) != null)
 			{
-				tokens.AddRange(Tokenize(line));
+				Tokenize(line, tokens);
 				tokens.Add(Token.NewLineToken);
 			}
 			return tokens;
+		}
+
+		private void Tokenize(string text, ICollection<Token> tokenCollection)
+		{
+			var offset = 0;
+			var numberOfChars = text.Length;
+
+			while (offset < numberOfChars)
+			{
+				var match = FindMatch(text, offset);
+				if (match.IsMatch)
+				{
+					tokenCollection.Add(new Token(match.TokenType, match.Value));
+					offset += match.MatchLength;
+				}
+				else
+				{
+					offset++;
+				}
+			}
 		}
 
 		private TokenMatch FindMatch(string text, int offset)
