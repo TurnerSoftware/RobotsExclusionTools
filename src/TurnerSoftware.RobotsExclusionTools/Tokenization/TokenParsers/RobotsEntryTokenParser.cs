@@ -7,6 +7,20 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 {
 	public class RobotsEntryTokenParser : IRobotsFileTokenParser
 	{
+		private const string UserAgentField = "User-agent";
+		private const string DisallowField = "Disallow";
+		private const string AllowField = "Allow";
+		private const string CrawlDelayField = "Crawl-delay";
+		private const string SitemapField = "Sitemap";
+
+		private static readonly HashSet<string> ExpectedFields = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+		{
+			UserAgentField,
+			DisallowField,
+			AllowField,
+			CrawlDelayField
+		};
+
 		private class SiteAccessParseState
 		{
 			public List<string> UserAgents { get; } = new List<string>();
@@ -33,57 +47,55 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 
 		public IEnumerable<SiteAccessEntry> GetSiteAccessEntries(IEnumerable<Token> tokens)
 		{
-			//TODO: Refactor the implementation to not be as nasty as it is :(
 			var result = new List<SiteAccessEntry>();
 			var parseState = new SiteAccessParseState();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
-			var expectedFields = new[] { "User-agent", "Allow", "Disallow", "Crawl-delay" };
+			var comparer = StringComparer.OrdinalIgnoreCase;
 
 			using (var enumerator = tokens.GetEnumerator())
 			{
-				var lastFieldValue = string.Empty;
+				string lastFieldValue = null;
 				while (enumerator.MoveTo(TokenType.Field))
 				{
-					var fieldCurrent = enumerator.Current;
+					var fieldValue = enumerator.Current.Value;
 
-					if (!expectedFields.Contains(fieldCurrent.Value))
+					if (!ExpectedFields.Contains(fieldValue))
 					{
 						continue;
 					}
 
 					//Reset the state when we have encountered a new "User-agent" field not immediately after another
-					if (lastFieldValue != string.Empty && lastFieldValue != "User-agent" && fieldCurrent.Value == "User-agent")
+					if (!string.IsNullOrEmpty(lastFieldValue) && !comparer.Equals(lastFieldValue, UserAgentField) && comparer.Equals(fieldValue, UserAgentField))
 					{
 						result.Add(parseState.AsEntry());
 						parseState.Reset();
 					}
 					
-					//When we have seen a field for the first time that isn't a User-agent, default to all User-agents
-					if (lastFieldValue == string.Empty && fieldCurrent.Value != "User-agent")
+					//When we have seen a field for the first time that isn't a User-agent, default to all User-agents (written as "*")
+					if (string.IsNullOrEmpty(lastFieldValue) && !comparer.Equals(fieldValue, UserAgentField))
 					{
 						parseState.UserAgents.Add("*");
 					}
 
-					lastFieldValue = fieldCurrent.Value;
+					lastFieldValue = fieldValue;
 
-					if (fieldCurrent.Value == "User-agent")
+					if (comparer.Equals(fieldValue, UserAgentField))
 					{
-						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
+						if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 						{
 							parseState.UserAgents.Add(enumerator.Current.Value);
 						}
 					}
-					else if (fieldCurrent.Value == "Allow" || fieldCurrent.Value == "Disallow")
+					else if (comparer.Equals(fieldValue, AllowField) || comparer.Equals(fieldValue, DisallowField))
 					{
-						var pathRule = fieldCurrent.Value == "Disallow" ? PathRuleType.Disallow : PathRuleType.Allow;
+						var pathRule = comparer.Equals(fieldValue, DisallowField) ? PathRuleType.Disallow : PathRuleType.Allow;
 						var pathValue = string.Empty;
 
-						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
+						if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 						{
 							pathValue = enumerator.Current.Value;
 						}
 
-						if (pathRule == PathRuleType.Allow && pathValue == null)
+						if (pathRule == PathRuleType.Allow && string.IsNullOrEmpty(pathValue))
 						{
 							//Only disallow can be blank (no "Value" token) - See Section 4 of RFC
 							continue;
@@ -95,13 +107,13 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 							Path = pathValue
 						});
 					}
-					else if (fieldCurrent.Value == "Crawl-delay")
+					else if (comparer.Equals(fieldValue, CrawlDelayField))
 					{
-						if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
+						if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 						{
-							if (int.TryParse(enumerator.Current.Value, out int parsedInt))
+							if (int.TryParse(enumerator.Current.Value, out var parsedCrawlDelay))
 							{
-								parseState.CrawlDelay = parsedInt;
+								parseState.CrawlDelay = parsedCrawlDelay;
 							}
 						}
 					}
@@ -116,15 +128,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 		public IEnumerable<SitemapUrlEntry> GetSitemapUrlEntries(IEnumerable<Token> tokens)
 		{
 			var result = new List<SitemapUrlEntry>();
-			var valueSteppingTokens = new[] { TokenType.FieldValueDelimiter };
 
 			using (var enumerator = tokens.GetEnumerator())
 			{
-				while (enumerator.MoveTo(TokenType.Field, "Sitemap"))
+				while (enumerator.MoveTo(TokenType.Field, SitemapField))
 				{
-					if (enumerator.StepOverTo(TokenType.Value, valueSteppingTokens))
+					if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 					{
-						if (Uri.TryCreate(enumerator.Current.Value, UriKind.Absolute, out Uri createdUri))
+						if (Uri.TryCreate(enumerator.Current.Value, UriKind.Absolute, out var createdUri))
 						{
 							result.Add(new SitemapUrlEntry
 							{

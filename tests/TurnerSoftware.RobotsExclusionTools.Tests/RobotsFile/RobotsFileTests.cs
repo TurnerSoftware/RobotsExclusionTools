@@ -48,7 +48,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/works"), "SuperSpecialCrawler/1.0"));
 		}
 
-
 		[TestMethod]
 		public void IsAllowedAccessViaRelativeUris()
 		{
@@ -57,6 +56,23 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Excite/1.0"));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/index.html", UriKind.Relative), "Unhipbot/1.0"));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Unhipbot/1.0"));
+		}
+
+		[TestMethod]
+		public void FieldCasing()
+		{
+			var robotsFile = GetRobotsFile("FieldCasing-Example.txt");
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "A"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "B"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "C"));
+
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "A"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "B"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "C"));
+
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "A"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "B"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "C"));
 		}
 	}
 }
