@@ -10,7 +10,7 @@ using BenchmarkDotNet.Jobs;
 namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 {
 	[Config(typeof(CustomConfig))]
-	public class StreamingVsString
+	public class StreamVsString
 	{
 		private class CustomConfig : ManualConfig
 		{
@@ -46,13 +46,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 				fileStream.CopyTo(MemoryStream);
 			}
 
+			MemoryStream.Seek(0, SeekOrigin.Begin);
 			var streamReader = new StreamReader(MemoryStream);
 			RobotsText = streamReader.ReadToEnd();
 			MemoryStream.Seek(0, SeekOrigin.Begin);
 		}
 
 		[Benchmark]
-		public async Task<RobotsFile> MemoryStreamingTokenization()
+		public async Task<RobotsFile> FromStream()
 		{
 			var result = await Parser.FromStreamAsync(MemoryStream, Uri);
 			MemoryStream.Seek(0, SeekOrigin.Begin);
@@ -60,32 +61,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 		}
 
 		[Benchmark]
-		public RobotsFile MemoryStringTokenization()
+		public RobotsFile FromString()
 		{
 			return Parser.FromString(RobotsText, Uri);
-		}
-
-		[Benchmark]
-		public async Task<RobotsFile> FileStreamingTokenization()
-		{
-			using (var fileStream = new FileStream("Resources/Google-Robots.txt", FileMode.Open))
-			{
-				return await Parser.FromStreamAsync(fileStream, Uri);
-			}
-		}
-
-		[Benchmark]
-		public async Task<RobotsFile> FileStringTokenization()
-		{
-			string robots;
-
-			using (var fileStream = new FileStream("Resources/Google-Robots.txt", FileMode.Open))
-			using (var streamReader = new StreamReader(fileStream))
-			{
-				robots = await streamReader.ReadToEndAsync();
-			}
-
-			return Parser.FromString(robots, Uri);
 		}
 	}
 }
