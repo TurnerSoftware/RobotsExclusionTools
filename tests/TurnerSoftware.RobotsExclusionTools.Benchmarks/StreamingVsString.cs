@@ -18,14 +18,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 			{
 				AddDiagnoser(MemoryDiagnoser.Default);
 
-				AddJob(Job.Default
+				AddJob(Job.ShortRun
 					.WithRuntime(ClrRuntime.Net461)
 					.AsBaseline());
 
-				AddJob(Job.Default
+				AddJob(Job.ShortRun
 					.WithRuntime(CoreRuntime.Core21));
 
-				AddJob(Job.Default
+				AddJob(Job.ShortRun
 					.WithRuntime(CoreRuntime.Core31));
 			}
 		}
