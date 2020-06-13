@@ -17,19 +17,20 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		public IEnumerable<Token> Tokenize(string text)
 		{
 			var tokens = new List<Token>();
-			var remainingText = text;
+			var offset = 0;
+			var numberOfChars = text.Length;
 
-			while (!string.IsNullOrWhiteSpace(remainingText))
+			while (offset < numberOfChars)
 			{
-				var match = FindMatch(remainingText);
+				var match = FindMatch(text, offset);
 				if (match.IsMatch)
 				{
 					tokens.Add(new Token(match.TokenType, match.Value));
-					remainingText = match.RemainingText;
+					offset += match.MatchLength;
 				}
 				else
 				{
-					remainingText = remainingText.Substring(1);
+					offset++;
 				}
 			}
 
@@ -60,11 +61,11 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			return tokens;
 		}
 
-		private TokenMatch FindMatch(string text)
+		private TokenMatch FindMatch(string text, int offset)
 		{
 			foreach (var tokenDefinition in GetTokenDefinitions())
 			{
-				var match = tokenDefinition.Match(text);
+				var match = tokenDefinition.Match(text, offset);
 				if (match.IsMatch)
 				{
 					return match;
