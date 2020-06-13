@@ -62,7 +62,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 
 		private TokenValidationError ValidateTokenPattern(int lineNumber, TokenPattern tokenPattern, Stack<TokenType> preceeding, Queue<TokenType> succeeding)
 		{
-			if (tokenPattern.Preceeding.Length > 0)
+			if (tokenPattern.Preceeding.Count > 0)
 			{
 				if (!PatternMatch(tokenPattern.Preceeding, preceeding))
 				{
@@ -70,7 +70,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 				}
 			}
 
-			if (tokenPattern.Succeeding.Length > 0)
+			if (tokenPattern.Succeeding.Count > 0)
 			{
 				if (!PatternMatch(tokenPattern.Succeeding, succeeding))
 				{
@@ -81,25 +81,32 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			return null;
 		}
 
-		private bool PatternMatch(IEnumerable<TokenType> initialTokens, IEnumerable<TokenType> comparisonTokens)
+		private bool PatternMatch(IReadOnlyCollection<TokenType> initialTokens, IReadOnlyCollection<TokenType> comparisonTokens)
 		{
 			//Check number of tokens match (though ignore required new lines)
 			//This effectively allows "NewLine" tokens to be optional when there are no proceeding tokens (eg. at the start of the file)
-			if (initialTokens.Count(t => t != TokenType.NewLine) > comparisonTokens.Count())
+			if (initialTokens.Count(t => t != TokenType.NewLine) > comparisonTokens.Count)
 			{
 				return false;
 			}
 
-			var sliceSize = Math.Min(initialTokens.Count(), comparisonTokens.Count());
-			var slicedTokensArray = comparisonTokens.Take(sliceSize).ToArray();
+			var index = 0;
+			var length = Math.Min(initialTokens.Count, comparisonTokens.Count);
 			var initialTokensArray = (TokenType[])initialTokens;
 
-			for (int i = 0, l = sliceSize; i < l; i++)
+			foreach (var comparisonToken in comparisonTokens)
 			{
-				if (initialTokensArray[i] != slicedTokensArray[i])
+				if (index >= length)
+				{
+					break;
+				}
+
+				if (initialTokensArray[index] != comparisonToken)
 				{
 					return false;
 				}
+
+				index++;
 			}
 
 			return true;
