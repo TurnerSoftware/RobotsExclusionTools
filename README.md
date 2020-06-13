@@ -19,7 +19,7 @@ A "robots.txt" parsing and querying library in C#, closely following the [NoRobo
 ## NoRobots RFC Compatibility
 This library attempts to stick closely to the rules defined in the RFC document, including:
 - Global/any user-agent when none is explicitly defined (Section 3.2.1 of RFC)
-- Field names (eg. "User-agent") are case sensitive and are character restricted (Section 3.3)
+- Field names (eg. "User-agent") are character restricted (Section 3.3)
 - Allow/disallow rules are performed by order-of-occurence (Section 3.2.2)
 - Loading by URI applies default rules based on access to "robots.txt" (Section 3.1)
 - Interoperability for varying line endings (Section 5.2)
