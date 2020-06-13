@@ -6,7 +6,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers
 {
 	public class RobotsFileTokenizer : TokenizerBase
 	{
-		private static readonly IEnumerable<TokenDefinition> TokenDefinitions = new List<TokenDefinition>
+		private static readonly IEnumerable<TokenDefinition> TokenDefinitions = new []
 		{
 			//Regex based on documented standard: http://www.robotstxt.org/norobots-rfc.txt
 
@@ -33,11 +33,11 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers
 			//This can be expressed as the following:
 			//\x21\x23-\x27\x2a\x2b\x2d\x2e\x41-\x5a\x5e-\x7a\x7c\x7e
 
-			new TokenDefinition(TokenType.Comment, @"^#[^\x0A\x0D]*"),
-			new TokenDefinition(TokenType.Field, @"^[\x21\x23-\x27\x2a\x2b\x2d\x2e\x41-\x5a\x5e-\x7a\x7c\x7e]+(?=:[ ])"),
-			new TokenDefinition(TokenType.FieldValueDelimiter, "^:[ ]"),
-			new TokenDefinition(TokenType.Value, @"^[^\x0A\x0D#]+"),
-			new TokenDefinition(TokenType.NewLine, @"^\x0D?\x0A")
+			new TokenDefinition(TokenType.Comment, @"\G#[^\x0A\x0D]*"),
+			new TokenDefinition(TokenType.Field, @"\G[\x21\x23-\x27\x2a\x2b\x2d\x2e\x41-\x5a\x5e-\x7a\x7c\x7e]+(?=:[ ])"),
+			new TokenDefinition(TokenType.FieldValueDelimiter, @"\G:[ ]"),
+			new TokenDefinition(TokenType.Value, @"\G[^\x0A\x0D#]+"),
+			new TokenDefinition(TokenType.NewLine, @"\G\x0D?\x0A")
 		};
 
 		protected override IEnumerable<TokenDefinition> GetTokenDefinitions()

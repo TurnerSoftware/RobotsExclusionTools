@@ -16,15 +16,15 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			TokenType = tokenType;
 		}
 
-		public TokenMatch Match(string input)
+		public TokenMatch Match(string input, int offset = 0)
 		{
-			var match = Regex.Match(input);
+			var match = Regex.Match(input, offset);
 			if (match.Success)
 			{
 				return new TokenMatch
 				{
 					IsMatch = true,
-					RemainingText = input.Substring(match.Length),
+					MatchLength = match.Length,
 					TokenType = TokenType,
 					Value = match.Value
 				};

@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net461</TargetFrameworks>
     <IsPackable>false</IsPackable>
-    <RootNamespace>TurnerSoftware.RobotsExclusionTools.Benchmarks</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

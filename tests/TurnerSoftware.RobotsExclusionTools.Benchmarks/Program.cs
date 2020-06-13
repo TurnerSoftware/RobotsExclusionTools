@@ -7,7 +7,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 	{
 		static void Main(string[] args)
 		{
-			var summary = BenchmarkRunner.Run<StreamingVsStringTokenization>();
+			BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 		}
 	}
 }
