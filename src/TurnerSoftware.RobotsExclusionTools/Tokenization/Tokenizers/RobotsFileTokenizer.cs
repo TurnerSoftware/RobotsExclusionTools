@@ -6,7 +6,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers
 {
 	public class RobotsFileTokenizer : TokenizerBase
 	{
-		private static readonly IEnumerable<TokenDefinition> TokenDefinitions = new List<TokenDefinition>
+		private static readonly IEnumerable<TokenDefinition> TokenDefinitions = new []
 		{
 			//Regex based on documented standard: http://www.robotstxt.org/norobots-rfc.txt
 
