@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net;
+using System.Threading;
 
 namespace TurnerSoftware.RobotsExclusionTools
 {
@@ -47,12 +48,12 @@ namespace TurnerSoftware.RobotsExclusionTools
 			}
 		}
 
-		public async Task<RobotsFile> FromUriAsync(Uri robotsUri)
+		public async Task<RobotsFile> FromUriAsync(Uri robotsUri, CancellationToken cancellationToken = default)
 		{
 			var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
 			robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
 			
-			using (var response = await HttpClient.GetAsync(robotsUri))
+			using (var response = await HttpClient.GetAsync(robotsUri, cancellationToken))
 			{
 				if (response.StatusCode == HttpStatusCode.NotFound)
 				{
@@ -66,7 +67,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					using (var stream = await response.Content.ReadAsStreamAsync())
 					{
-						return await FromStreamAsync(stream, baseUri);
+						return await FromStreamAsync(stream, baseUri, cancellationToken);
 					}
 				}
 			}
@@ -74,10 +75,10 @@ namespace TurnerSoftware.RobotsExclusionTools
 			return RobotsFile.AllowAllRobots(baseUri);
 		}
 
-		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri)
+		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri, CancellationToken cancellationToken = default)
 		{
 			var streamReader = new StreamReader(stream);
-			var tokens = await Tokenizer.TokenizeAsync(streamReader);
+			var tokens = await Tokenizer.TokenizeAsync(streamReader, cancellationToken);
 			return FromTokens(tokens, baseUri);
 		}
 

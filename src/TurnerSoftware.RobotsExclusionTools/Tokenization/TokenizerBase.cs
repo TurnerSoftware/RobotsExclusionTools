@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization
@@ -33,12 +34,13 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			return tokens;
 		}
 
-		public async Task<IEnumerable<Token>> TokenizeAsync(TextReader reader)
+		public async Task<IEnumerable<Token>> TokenizeAsync(TextReader reader, CancellationToken cancellationToken = default)
 		{
 			var tokens = new List<Token>();
 			string line;
 			while ((line = await reader.ReadLineAsync()) != null)
 			{
+				cancellationToken.ThrowIfCancellationRequested();
 				Tokenize(line, tokens);
 				tokens.Add(Token.NewLineToken);
 			}
