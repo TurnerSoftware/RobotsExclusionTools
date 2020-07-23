@@ -13,6 +13,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 		{
 			return File.ReadAllText($"Resources/{name}");
 		}
+		protected Stream LoadResourceStream(string name)
+		{
+			return File.OpenRead($"Resources/{name}");
+		}
 
 		protected string LoadRobotsRfcFileExample()
 		{

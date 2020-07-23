@@ -3,6 +3,9 @@ using TurnerSoftware.RobotsExclusionTools.Tokenization;
 using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
@@ -64,6 +67,19 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 
 			Assert.AreEqual(0, fieldTokens.Count());
 			Assert.AreEqual(19, valueTokens.Count());
+		}
+
+		[TestMethod]
+		public async Task TokenizeAsyncCancellation()
+		{
+			using (var stream = LoadResourceStream("RobotsFile/InvalidField-Example.txt"))
+			using (var reader = new StreamReader(stream))
+			{
+				var tokenizer = new RobotsFileTokenizer();
+				await Assert.ThrowsExceptionAsync<OperationCanceledException>(
+					async () => await tokenizer.TokenizeAsync(reader, new CancellationToken(true))
+				);
+			}
 		}
 	}
 }
