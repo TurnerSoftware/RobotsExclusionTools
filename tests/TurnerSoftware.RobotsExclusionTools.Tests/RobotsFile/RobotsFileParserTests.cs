@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tests.TestSite;
@@ -86,6 +87,30 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			{
 				var robotsFile = await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"));
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
+			}
+		}
+
+		[TestMethod]
+		public async Task FromUriLoading_Cancellation()
+		{
+			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
+			{
+				var cts = new CancellationToken(true);
+				await Assert.ThrowsExceptionAsync<OperationCanceledException>(
+					async () => await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"), cts)
+				);
+			}
+		}
+
+		[TestMethod]
+		public async Task FromStreamLoading_Cancellation()
+		{
+			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
+			{
+				var cts = new CancellationToken(true);
+				await Assert.ThrowsExceptionAsync<OperationCanceledException>(
+					async () => await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"), cts)
+				);
 			}
 		}
 	}
