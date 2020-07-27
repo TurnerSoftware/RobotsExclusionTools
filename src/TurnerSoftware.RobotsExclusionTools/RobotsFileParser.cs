@@ -68,6 +68,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					using (var stream = await response.Content.ReadAsStreamAsync())
 					{
+						cancellationToken.ThrowIfCancellationRequested();
 						return await FromStreamAsync(stream, baseUri, cancellationToken);
 					}
 				}
