@@ -52,13 +52,24 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			var offset = 0;
 			var numberOfChars = text.Length;
 
+			var lastTokenEnd = 0;
+
 			while (offset < numberOfChars)
 			{
 				var match = FindMatch(text, offset);
 				if (match.IsMatch)
 				{
+					if (lastTokenEnd != offset)
+					{
+						tokenCollection.Add(new Token(
+							TokenType.NotDefined,
+							text.Substring(lastTokenEnd, offset - lastTokenEnd)
+						));
+					}
+
 					tokenCollection.Add(new Token(match.TokenType, match.Value));
 					offset += match.MatchLength;
+					lastTokenEnd = offset;
 				}
 				else
 				{
@@ -78,7 +89,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 				}
 			}
 
-			return new TokenMatch { IsMatch = false };
+			return TokenMatch.NoMatch;
 		}
 	}
 }

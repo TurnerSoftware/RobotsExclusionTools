@@ -38,7 +38,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 			var firstError = result.Errors.First();
 			Assert.AreEqual(TokenType.NewLine, firstError.Expected.ElementAt(0));
 			Assert.AreEqual(1, firstError.Expected.Count());
-			Assert.AreEqual(TokenType.Value, firstError.Actual.ElementAt(0));
+			Assert.AreEqual(TokenType.NotDefined, firstError.Actual.ElementAt(0));
 			Assert.AreEqual(1, firstError.Actual.Count());
 			Assert.AreEqual(1, result.Errors.Count());
 		}

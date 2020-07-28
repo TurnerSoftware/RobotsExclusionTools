@@ -38,9 +38,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsFalse(result.IsValid);
 
 			var firstErrorExpectedTokens = result.Errors.First().Expected;
-			Assert.AreEqual(TokenType.FieldValueDelimiter, firstErrorExpectedTokens.ElementAt(0));
-			Assert.AreEqual(TokenType.Field, firstErrorExpectedTokens.ElementAt(1));
-			Assert.AreEqual(2, firstErrorExpectedTokens.Count());
+			Assert.AreEqual(TokenType.NewLine, firstErrorExpectedTokens.ElementAt(0));
+			Assert.AreEqual(1, firstErrorExpectedTokens.Count());
 			Assert.AreEqual(19, result.Errors.Count());
 		}
 	}
