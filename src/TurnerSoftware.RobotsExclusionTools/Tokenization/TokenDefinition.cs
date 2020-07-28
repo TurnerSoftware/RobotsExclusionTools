@@ -31,7 +31,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 			}
 			else
 			{
-				return new TokenMatch { IsMatch = false };
+				return TokenMatch.NoMatch;
 			}
 		}
 	}

@@ -10,5 +10,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization
 		public TokenType TokenType { get; set; }
 		public string Value { get; set; }
 		public int MatchLength { get; set; }
+
+		public static readonly TokenMatch NoMatch = new TokenMatch { IsMatch = false };
 	}
 }

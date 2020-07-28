@@ -1,16 +1,16 @@
 ﻿# /robots.txt for http://www.fict.org/
 # comments to webmaster@fict.org
-
 User-agent: unhipbot
 Disallow: /
-
+  		    
 User-agent: webcrawler
 User-agent: excite
 Disallow: 
-
+  	
 User-agent: *
 Disallow: /org/plans.html
 Allow: /org/
 Allow: /serv
 Allow: /~mak
 Disallow: /
+

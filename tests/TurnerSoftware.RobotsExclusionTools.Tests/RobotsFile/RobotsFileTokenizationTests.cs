@@ -62,11 +62,12 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			var tokenizer = new RobotsFileTokenizer();
 			var tokens = tokenizer.Tokenize(robots);
 
-			var fieldTokens = tokens.Where(t => t.TokenType == TokenType.Field);
-			var valueTokens = tokens.Where(t => t.TokenType == TokenType.Value);
-
-			Assert.AreEqual(0, fieldTokens.Count());
-			Assert.AreEqual(19, valueTokens.Count());
+			Assert.AreEqual(19, tokens.Count(t => t.TokenType == TokenType.NotDefined));
+			Assert.AreEqual(2, tokens.Count(t => t.TokenType == TokenType.Blank));
+			Assert.AreEqual(19, tokens.Count(t => t.TokenType == TokenType.Field));
+			Assert.AreEqual(19, tokens.Count(t => t.TokenType == TokenType.FieldValueDelimiter));
+			Assert.AreEqual(19, tokens.Count(t => t.TokenType == TokenType.Value));
+			Assert.AreEqual(18, tokens.Count(t => t.TokenType == TokenType.NewLine));
 		}
 
 		[TestMethod]
