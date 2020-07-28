@@ -1,21 +1,21 @@
 ﻿User-agent: *
 Crawl-delay: 60
 Disallow: 
-  		    
+ 
 Sitemap: http://www.example.org/sitemap.xml
   		    
 User-agent: SinglePathAllowed
 Allow: /orgs/plan.html
 Disallow: /
-  		    
+  
 User-agent: ImplicitWildcardAllowed
 Allow: /orgs
 Disallow: /
-  		    
+  		   
 User-agent: ExplicitWildcardSuffix
 Allow: /org*
 Disallow: /
-  		    
+  		
 User-agent: ExplicitWildcardPrefix
 Allow: *.html
 Disallow: /
@@ -23,13 +23,13 @@ Disallow: /
 User-agent: ContainedWildcard
 Allow: /org*/plan.html
 Disallow: /
-  		    
+
 User-agent: PathWithAnyQueryString
 Disallow: /org/plan.html?
-  		    
+  		        
 User-agent: PathWithPartQueryString
 Disallow: /org/plan.html?foo=bar*
-  		    
+ 
 User-agent: PathMustStartWith
 Disallow: /org/plan.html
 
@@ -38,9 +38,4 @@ Disallow: /org/plan.html$
 Disallow: /org/planb.html*$
   		    
 Sitemap: http://www.example.org/sitemap2.xml
-
-
-
-  		    
-
 
