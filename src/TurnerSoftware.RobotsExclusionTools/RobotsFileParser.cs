@@ -55,6 +55,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			
 			using (var response = await HttpClient.GetAsync(robotsUri, cancellationToken))
 			{
+				cancellationToken.ThrowIfCancellationRequested(); // '.NET Framework' and '.NET Core 2.1' workaround
 				if (response.StatusCode == HttpStatusCode.NotFound)
 				{
 					return RobotsFile.AllowAllRobots(baseUri);
@@ -67,6 +68,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 				{
 					using (var stream = await response.Content.ReadAsStreamAsync())
 					{
+						cancellationToken.ThrowIfCancellationRequested();
 						return await FromStreamAsync(stream, baseUri, cancellationToken);
 					}
 				}
