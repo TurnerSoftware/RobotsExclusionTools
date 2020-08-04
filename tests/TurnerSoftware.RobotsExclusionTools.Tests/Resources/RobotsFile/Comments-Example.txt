@@ -1,0 +1,6 @@
+﻿# Comment on its own line
+User-agent: A # Comment sharing a line with a field, delimiter and value
+Disallow: # Comment sharing a line with a field and delimiter
+
+User-agent: B ## Double comment
+Disallow: / # A comment with a # part way through as if it was another comment

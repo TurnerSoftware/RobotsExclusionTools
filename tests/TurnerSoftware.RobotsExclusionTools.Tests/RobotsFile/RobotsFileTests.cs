@@ -74,5 +74,25 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "B"));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "C"));
 		}
+
+		[TestMethod]
+		public void BlankSpacingBetweenRecords()
+		{
+			var robotsFile = GetRobotsFile("BlankSpacing-Example.txt");
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "BeforeSpacing"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpace"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterTab"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpaceAndTab"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AnythingElse"));
+		}
+
+		[TestMethod]
+		public void Comments()
+		{
+			var robotsFile = GetRobotsFile("Comments-Example.txt");
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "A"));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "B"));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "C"));
+		}
 	}
 }

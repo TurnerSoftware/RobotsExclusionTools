@@ -1,0 +1,11 @@
+﻿User-agent: BeforeSpacing
+Disallow: /
+ 
+User-agent: AfterSpace
+Disallow: /
+	
+User-agent: AfterTab
+Disallow: /
+	
+User-agent: AfterSpaceAndTab
+Disallowed: /
