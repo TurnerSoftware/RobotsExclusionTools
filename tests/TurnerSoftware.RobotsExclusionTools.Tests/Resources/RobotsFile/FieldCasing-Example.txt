@@ -1,9 +1,9 @@
-﻿User-agent: A
-Disallow: /RFCCompliant
+﻿    	  User-agent    	  :A#####comment
+    	  Disallow    	  :    	  /RFCCompliant    	  ####
 	
-User-Agent: B
-Disallow: /DifferentCaseUserAgent
+User-Agent      :B
+    	  Disallow      :/DifferentCaseUserAgent###
   		    
-User-agent: C
-DisAllow: /DifferentCaseRule
+User-agent: C###
+    	  DisAllow    	  :    	  /DifferentCaseRule    	  #####
      
