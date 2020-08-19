@@ -8,10 +8,14 @@
 
   <ItemGroup>
     <None Remove="Resources\*\*.*" />
+    <None Remove="Resources\*\*\*.*" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Resources\*\*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\*\*\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

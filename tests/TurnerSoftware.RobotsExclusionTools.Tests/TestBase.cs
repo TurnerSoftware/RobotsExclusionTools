@@ -9,33 +9,40 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests
 	[TestClass]
 	public class TestBase
 	{
-		protected string LoadResource(string name)
+		protected static string LoadResource(string name)
 		{
 			return File.ReadAllText($"Resources/{name}");
 		}
-		protected Stream LoadResourceStream(string name)
+		protected static Stream LoadResourceStream(string name)
 		{
 			return File.OpenRead($"Resources/{name}");
 		}
 
-		protected string LoadRobotsRfcFileExample()
+		protected static string LoadRobotsRfcFileExample()
 		{
 			return LoadResource("RobotsFile/NoRobots-RFC-Example.txt");
 		}
 
-		protected RobotsExclusionTools.RobotsFile GetRobotsFile(string name)
+		protected static RobotsExclusionTools.RobotsFile GetRobotsFile(string name)
 		{
 			var robots = LoadResource("RobotsFile/" + name);
 			var robotsFile = new RobotsFileParser().FromString(robots, new Uri("http://www.example.org"));
 			return robotsFile;
 		}
 
-		protected RobotsExclusionTools.RobotsFile GetRfcRobotsFile()
+		protected static RobotsExclusionTools.RobotsFile GetSampleRobotsFile(string domainName)
+		{
+			var robots = LoadResource($"RobotsFile/Samples/{domainName}.txt");
+			var robotsFile = new RobotsFileParser().FromString(robots, new Uri($"http://{domainName}"));
+			return robotsFile;
+		}
+
+		protected static RobotsExclusionTools.RobotsFile GetRfcRobotsFile()
 		{
 			return GetRobotsFile("NoRobots-RFC-Example.txt");
 		}
 		
-		protected RobotsPageDefinition GetRobotsPageDefinition(string name)
+		protected static RobotsPageDefinition GetRobotsPageDefinition(string name)
 		{
 			var robots = LoadResource("RobotsPage/" + name);
 			var robotsPage = new RobotsPageParser().FromRules(robots.Split('\n'));
