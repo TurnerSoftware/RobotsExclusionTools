@@ -2,11 +2,11 @@
 # comments to webmaster@fict.org
 User-agent: unhipbot
 Disallow: /
-  		    
+
 User-agent: webcrawler
 User-agent: excite
 Disallow: 
-  	
+
 User-agent: *
 Disallow: /org/plans.html
 Allow: /org/

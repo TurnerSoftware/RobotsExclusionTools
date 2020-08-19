@@ -82,7 +82,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 					{
 						if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 						{
-							parseState.UserAgents.Add(enumerator.Current.Value);
+							//NOTE: Doesn't evaluate the strict "agent" definition in Section 4 of RFC
+							//		While trimming the value avoids some issues, it isn't a char-for-char accurate
+							//		interpretation of the RFC and thus, is limited.
+							parseState.UserAgents.Add(enumerator.Current.Value.Trim());
 						}
 					}
 					else if (comparer.Equals(fieldValue, AllowField) || comparer.Equals(fieldValue, DisallowField))
@@ -92,7 +95,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers
 
 						if (enumerator.StepOverTo(TokenType.Value, TokenType.FieldValueDelimiter))
 						{
-							pathValue = enumerator.Current.Value;
+							//NOTE: As with the User-agent values, this doesn't evaluate the "strict" definition in the RFC
+							//		Paths have specific limitations about characters that are and aren't allowed
+							pathValue = enumerator.Current.Value.Trim();
 						}
 
 						if (pathRule == PathRuleType.Allow && string.IsNullOrEmpty(pathValue))
