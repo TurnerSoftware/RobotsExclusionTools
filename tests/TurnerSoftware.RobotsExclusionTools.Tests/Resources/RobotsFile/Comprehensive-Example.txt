@@ -36,6 +36,10 @@ Disallow: /org/plan.html
 User-agent: PathMustEndWith
 Disallow: /org/plan.html$
 Disallow: /org/planb.html*$
+
+User-agent: OnlyWildcard
+Disallow: /org/plan.html
+Allow: *
   		    
 Sitemap: http://www.example.org/sitemap2.xml
 

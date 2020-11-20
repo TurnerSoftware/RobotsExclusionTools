@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace TurnerSoftware.RobotsExclusionTools.Helpers
 {
-	public class PathComparisonUtility
+	public static class PathComparisonUtility
 	{
-		public bool IsAllowed(SiteAccessEntry accessEntry, Uri requestUri)
+		public static bool IsAllowed(SiteAccessEntry accessEntry, Uri requestUri)
 		{
 			var requestPath = requestUri.PathAndQuery;
 
@@ -38,14 +36,14 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 			return true;
 		}
 
-		public bool PathMatch(string sourceRecord, string uriPath, StringComparison comparison)
+		public static bool PathMatch(string sourceRecord, string uriPath, StringComparison comparison)
 		{
 			var sourcePieces = sourceRecord.Split(new[] { '*' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 			var lastPiece = sourcePieces.LastOrDefault();
 			var mustMatchToEnd = false;
 			var mustMatchToStart = true;
 
-			if (lastPiece.EndsWith("$"))
+			if (lastPiece != null && lastPiece.EndsWith("$"))
 			{
 				//Remove the last dollar sign from the last piece
 				lastPiece = lastPiece.Substring(0, lastPiece.Length - 1);

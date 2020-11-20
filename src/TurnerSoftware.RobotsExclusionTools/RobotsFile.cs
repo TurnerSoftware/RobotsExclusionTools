@@ -53,8 +53,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			}
 
 			var entry = GetEntryForUserAgent(userAgent);
-			var pathComparisonUtility = new PathComparisonUtility();
-			return pathComparisonUtility.IsAllowed(entry, uri);
+			return PathComparisonUtility.IsAllowed(entry, uri);
 		}
 
 		public SiteAccessEntry GetEntryForUserAgent(string userAgent)

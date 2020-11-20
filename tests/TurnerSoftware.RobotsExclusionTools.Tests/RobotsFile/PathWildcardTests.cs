@@ -97,5 +97,20 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
 			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
 		}
+
+		[TestMethod]
+		public void OnlyWildcard()
+		{
+			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
+			var userAgent = "OnlyWildcard";
+
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
+			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
+			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
+		}
 	}
 }
