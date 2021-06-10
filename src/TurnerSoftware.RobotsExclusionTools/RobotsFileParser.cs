@@ -31,7 +31,8 @@ namespace TurnerSoftware.RobotsExclusionTools
 			PatternValidator = patternValidator ?? throw new ArgumentNullException(nameof(patternValidator));
 			TokenParser = tokenParser ?? throw new ArgumentNullException(nameof(tokenParser));
 		}
-		
+
+		/// <inheritdoc/>
 		public RobotsFile FromString(string robotsText, Uri baseUri)
 		{
 			using (var memoryStream = new MemoryStream())
@@ -48,21 +49,33 @@ namespace TurnerSoftware.RobotsExclusionTools
 			}
 		}
 
-		public async Task<RobotsFile> FromUriAsync(Uri robotsUri, CancellationToken cancellationToken = default)
+		/// <inheritdoc/>
+		public Task<RobotsFile> FromUriAsync(Uri robotsUri, CancellationToken cancellationToken = default)
+		{
+			return FromUriAsync(robotsUri, RobotsFileAccessRules.NoRobotsRfc, cancellationToken);
+		}
+
+		/// <inheritdoc/>
+		public async Task<RobotsFile> FromUriAsync(Uri robotsUri, RobotsFileAccessRules accessRules, CancellationToken cancellationToken = default)
 		{
 			var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
 			robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
-			
+
 			using (var response = await HttpClient.GetAsync(robotsUri, cancellationToken))
 			{
 				cancellationToken.ThrowIfCancellationRequested(); // '.NET Framework' and '.NET Core 2.1' workaround
+
 				if (response.StatusCode == HttpStatusCode.NotFound)
 				{
-					return RobotsFile.AllowAllRobots(baseUri);
+					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen404NotFound);
 				}
-				else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
+				else if (response.StatusCode == HttpStatusCode.Unauthorized)
 				{
-					return RobotsFile.DenyAllRobots(baseUri);
+					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen401Unauthorized);
+				}
+				else if (response.StatusCode == HttpStatusCode.Forbidden)
+				{
+					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen403Forbidden);
 				}
 				else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
 				{
@@ -77,6 +90,7 @@ namespace TurnerSoftware.RobotsExclusionTools
 			return RobotsFile.AllowAllRobots(baseUri);
 		}
 
+		/// <inheritdoc/>
 		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri, CancellationToken cancellationToken = default)
 		{
 			var streamReader = new StreamReader(stream);
