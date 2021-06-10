@@ -65,7 +65,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			using (var siteManager = GetRobotsSiteManager(401))
 			{
 				var client = siteManager.GetHttpClient();
-				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
+				{
+					AllowAllWhen401Unauthorized = true
+				});
 				Assert.IsFalse(robotsFile.SiteAccessEntries.Any());
 			}
 		}
@@ -75,7 +78,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			using (var siteManager = GetRobotsSiteManager(401))
 			{
 				var client = siteManager.GetHttpClient();
-				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
+				{
+					AllowAllWhen401Unauthorized = false
+				});
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
 					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
 				));
@@ -88,7 +94,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			using (var siteManager = GetRobotsSiteManager(403))
 			{
 				var client = siteManager.GetHttpClient();
-				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
+				{
+					AllowAllWhen403Forbidden = true
+				});
 				Assert.IsFalse(robotsFile.SiteAccessEntries.Any());
 			}
 		}
@@ -98,7 +107,10 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			using (var siteManager = GetRobotsSiteManager(403))
 			{
 				var client = siteManager.GetHttpClient();
-				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
+				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
+				{
+					AllowAllWhen403Forbidden = false
+				});
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
 					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
 				));
