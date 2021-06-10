@@ -20,16 +20,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{969CA4
 		.codecov.yml = .codecov.yml
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		build.appveyor.ps1 = build.appveyor.ps1
-		build.ps1 = build.ps1
-		buildconfig.json = buildconfig.json
 		License.txt = License.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnerSoftware.RobotsExclusionTools.Benchmarks", "tests\TurnerSoftware.RobotsExclusionTools.Benchmarks\TurnerSoftware.RobotsExclusionTools.Benchmarks.csproj", "{1811806F-6214-4D60-A769-26C3DD8226EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnerSoftware.RobotsExclusionTools.Tests.TestSite", "tests\TurnerSoftware.RobotsExclusionTools.Tests.TestSite\TurnerSoftware.RobotsExclusionTools.Tests.TestSite.csproj", "{780B4021-C5F6-46A3-BDB0-E07F376B37B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnerSoftware.RobotsExclusionTools.Tests.TestSite", "tests\TurnerSoftware.RobotsExclusionTools.Tests.TestSite\TurnerSoftware.RobotsExclusionTools.Tests.TestSite.csproj", "{780B4021-C5F6-46A3-BDB0-E07F376B37B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
