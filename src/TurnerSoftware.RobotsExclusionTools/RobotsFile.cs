@@ -18,6 +18,11 @@ namespace TurnerSoftware.RobotsExclusionTools
 			BaseUri = baseUri;
 		}
 
+		internal static RobotsFile ConditionalRobots(Uri baseUri, bool condition)
+		{
+			return condition ? AllowAllRobots(baseUri) : DenyAllRobots(baseUri);
+		}
+
 		public static RobotsFile AllowAllRobots(Uri baseUri)
 		{
 			return new RobotsFile(baseUri);
