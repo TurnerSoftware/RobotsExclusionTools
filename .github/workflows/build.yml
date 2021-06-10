@@ -77,7 +77,7 @@ jobs:
         name: coverage-report
         path: Cobertura.xml
 
-  deploy-to-github-packages:
+  push-to-github-packages:
     name: 'Push GitHub Packages'
     needs: build
     if: github.ref == 'refs/heads/main' || github.event_name == 'release'
@@ -97,7 +97,7 @@ jobs:
       - name: 'Upload NuGet package'
         run: dotnet nuget push *.nupkg --api-key ${{ github.token }} --source GitHub --skip-duplicate --no-symbols
 
-  deploy-to-nuget:
+  push-to-nuget:
     name: 'Push NuGet Packages'
     needs: build
     if: github.event_name == 'release'
