@@ -2,7 +2,9 @@
 
 ![Icon](images/icon.png)
 # Robots Exclusion Tools
-A "robots.txt" parsing and querying library in C#, closely following the [NoRobots RFC](http://www.robotstxt.org/norobots-rfc.txt) and other details on [robotstxt.org](http://www.robotstxt.org/robotstxt.html).
+A "robots.txt" parsing and querying library for .NET
+
+Closely following the [NoRobots RFC](http://www.robotstxt.org/norobots-rfc.txt) and other details on [robotstxt.org](http://www.robotstxt.org/robotstxt.html).
 
 ![Build](https://img.shields.io/github/workflow/status/TurnerSoftware/robotsexclusiontools/Build)
 [![Codecov](https://img.shields.io/codecov/c/github/turnersoftware/robotsexclusiontools/main.svg)](https://codecov.io/gh/TurnerSoftware/RobotsExclusionTools)
