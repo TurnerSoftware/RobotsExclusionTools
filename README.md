@@ -1,9 +1,13 @@
+<div align="center">
+
+![Icon](images/icon.png)
 # Robots Exclusion Tools
 A "robots.txt" parsing and querying library in C#, closely following the [NoRobots RFC](http://www.robotstxt.org/norobots-rfc.txt) and other details on [robotstxt.org](http://www.robotstxt.org/robotstxt.html).
 
-[![AppVeyor](https://img.shields.io/appveyor/ci/Turnerj/robotsexclusiontools/main.svg)](https://ci.appveyor.com/project/Turnerj/robotsexclusiontools)
+![Build](https://img.shields.io/github/workflow/status/TurnerSoftware/robotsexclusiontools/Build)
 [![Codecov](https://img.shields.io/codecov/c/github/turnersoftware/robotsexclusiontools/main.svg)](https://codecov.io/gh/TurnerSoftware/RobotsExclusionTools)
 [![NuGet](https://img.shields.io/nuget/v/TurnerSoftware.RobotsExclusionTools.svg)](https://www.nuget.org/packages/TurnerSoftware.RobotsExclusionTools)
+</div>
 
 ## Features
 - Load Robots by string, by URI (Async) or by streams (Async)
@@ -15,6 +19,14 @@ A "robots.txt" parsing and querying library in C#, closely following the [NoRobo
 - Built-in "robots.txt" tokenization system (allowing extension to support other custom fields)
 - Built-in "robots.txt" validator (allowing to validate a tokenized file)
 - Dedicated parser for the data from `<meta name="robots" />` tag and the `X-Robots-Tag` header
+
+## Licensing and Support
+
+Robots Exclusion Tools is licensed under the MIT license. It is free to use in personal and commercial projects.
+
+There are [support plans](https://turnersoftware.com.au/support-plans) available that cover all active [Turner Software OSS projects](https://github.com/TurnerSoftware).
+Support plans provide private email support, expert usage advice for our projects, priority bug fixes and more.
+These support plans help fund our OSS commitments to provide better software for everyone.
 
 ## NoRobots RFC Compatibility
 This library attempts to stick closely to the rules defined in the RFC document, including:
