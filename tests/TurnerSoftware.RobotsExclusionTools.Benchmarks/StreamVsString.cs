@@ -23,9 +23,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Benchmarks
 					.AsBaseline());
 
 				AddJob(Job.ShortRun
-					.WithRuntime(CoreRuntime.Core21));
-
-				AddJob(Job.ShortRun
 					.WithRuntime(CoreRuntime.Core31));
 			}
 		}
