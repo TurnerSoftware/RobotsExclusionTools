@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools;
+
+public interface IRobotsPageDefinitionParser
 {
-	public interface IRobotsPageDefinitionParser
-	{
-		RobotsPageDefinition FromRules(IEnumerable<string> rules);
-	}
+	RobotsPageDefinition FromRules(IEnumerable<string> rules);
 }

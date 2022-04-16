@@ -11,7 +11,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 	[TestClass]
 	public class RobotsFileParserTests : TestBase
 	{
-		private TestSiteManager GetRobotsSiteManager(int statusCode)
+		private static TestSiteManager GetRobotsSiteManager(int statusCode)
 		{
 			return new TestSiteManager(new SiteContext { StatusCode = statusCode });
 		}

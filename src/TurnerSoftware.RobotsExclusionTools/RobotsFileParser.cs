@@ -1,117 +1,300 @@
-﻿using TurnerSoftware.RobotsExclusionTools.Tokenization;
-using TurnerSoftware.RobotsExclusionTools.Tokenization.Tokenizers;
-using TurnerSoftware.RobotsExclusionTools.Tokenization.TokenParsers;
-using TurnerSoftware.RobotsExclusionTools.Tokenization.Validators;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net;
 using System.Threading;
+using System.Runtime.CompilerServices;
+using TurnerSoftware.RobotsExclusionTools.Tokenization;
+using TurnerSoftware.RobotsExclusionTools.Helpers;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools;
+
+public class RobotsFileParser : IRobotsFileParser
 {
-	public class RobotsFileParser : IRobotsFileParser
+	private readonly HttpClient HttpClient;
+
+	public RobotsFileParser() : this(new HttpClient()) { }
+
+	public RobotsFileParser(HttpClient httpClient)
 	{
-		private ITokenizer Tokenizer { get; }
-		private ITokenPatternValidator PatternValidator { get; }
-		private IRobotsFileTokenParser TokenParser { get; }
+		HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+	}
 
-		private HttpClient HttpClient { get; }
+	/// <inheritdoc/>
+	public RobotsFile FromString(string robotsText, Uri baseUri)
+	{
+		Parse(robotsText.AsMemory(), out var siteAccessEntries, out var sitemapEntries);
+		return new RobotsFile(baseUri, siteAccessEntries, sitemapEntries);
+	}
 
-		public RobotsFileParser() : this(new HttpClient()) { }
+	/// <inheritdoc/>
+	public Task<RobotsFile> FromUriAsync(Uri robotsUri, CancellationToken cancellationToken = default)
+	{
+		return FromUriAsync(robotsUri, RobotsFileAccessRules.NoRobotsRfc, cancellationToken);
+	}
 
-		public RobotsFileParser(HttpClient client) : this(client, new RobotsFileTokenizer(), new RobotsFileTokenPatternValidator(), new RobotsEntryTokenParser()) { }
+	/// <inheritdoc/>
+	public async Task<RobotsFile> FromUriAsync(Uri robotsUri, RobotsFileAccessRules accessRules, CancellationToken cancellationToken = default)
+	{
+		var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
+		robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
 
-		public RobotsFileParser(HttpClient client, ITokenizer tokenizer, ITokenPatternValidator patternValidator, IRobotsFileTokenParser tokenParser)
+		using (var response = await HttpClient.GetAsync(robotsUri, cancellationToken))
 		{
-			HttpClient = client ?? throw new ArgumentNullException(nameof(client));
-			Tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));
-			PatternValidator = patternValidator ?? throw new ArgumentNullException(nameof(patternValidator));
-			TokenParser = tokenParser ?? throw new ArgumentNullException(nameof(tokenParser));
-		}
+			cancellationToken.ThrowIfCancellationRequested(); // '.NET Framework' and '.NET Core 2.1' workaround
 
-		/// <inheritdoc/>
-		public RobotsFile FromString(string robotsText, Uri baseUri)
-		{
-			using (var memoryStream = new MemoryStream())
+			if (response.StatusCode == HttpStatusCode.NotFound)
 			{
-				var streamWriter = new StreamWriter(memoryStream);
-				streamWriter.Write(robotsText);
-				streamWriter.Flush();
-
-				memoryStream.Seek(0, SeekOrigin.Begin);
-				
-				var streamReader = new StreamReader(memoryStream);
-				var tokens = Tokenizer.Tokenize(streamReader);
-				return FromTokens(tokens, baseUri);
+				return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen404NotFound);
+			}
+			else if (response.StatusCode == HttpStatusCode.Unauthorized)
+			{
+				return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen401Unauthorized);
+			}
+			else if (response.StatusCode == HttpStatusCode.Forbidden)
+			{
+				return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen403Forbidden);
+			}
+			else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+			{
+				using var stream = await response.Content.ReadAsStreamAsync();
+				cancellationToken.ThrowIfCancellationRequested();
+				return await FromStreamAsync(stream, baseUri, cancellationToken);
 			}
 		}
 
-		/// <inheritdoc/>
-		public Task<RobotsFile> FromUriAsync(Uri robotsUri, CancellationToken cancellationToken = default)
+		return RobotsFile.AllowAllRobots(baseUri);
+	}
+
+	/// <inheritdoc/>
+	public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri, CancellationToken cancellationToken = default)
+	{
+		var streamReader = new StreamReader(stream);
+		var robotsText = await streamReader.ReadToEndAsync();
+		return FromString(robotsText, baseUri);
+	}
+
+	private struct SiteAccessParseState
+	{
+		public List<string> UserAgents { get; private set; }
+		public List<SiteAccessPathRule> PathRules { get; private set; }
+		public int? CrawlDelay { get; set; }
+
+		public static SiteAccessParseState Create() => new()
 		{
-			return FromUriAsync(robotsUri, RobotsFileAccessRules.NoRobotsRfc, cancellationToken);
+			UserAgents = new List<string>(),
+			PathRules = new List<SiteAccessPathRule>()
+		};
+
+		public void Reset()
+		{
+			UserAgents.Clear();
+			PathRules.Clear();
+			CrawlDelay = null;
 		}
 
-		/// <inheritdoc/>
-		public async Task<RobotsFile> FromUriAsync(Uri robotsUri, RobotsFileAccessRules accessRules, CancellationToken cancellationToken = default)
+		public SiteAccessEntry AsEntry()
 		{
-			var baseUri = new Uri(robotsUri.GetLeftPart(UriPartial.Authority));
-			robotsUri = new UriBuilder(robotsUri) { Path = "/robots.txt" }.Uri;
-
-			using (var response = await HttpClient.GetAsync(robotsUri, cancellationToken))
+			return new SiteAccessEntry
 			{
-				cancellationToken.ThrowIfCancellationRequested(); // '.NET Framework' and '.NET Core 2.1' workaround
+				UserAgents = UserAgents.ToArray(),
+				PathRules = PathRules.ToArray(),
+				CrawlDelay = CrawlDelay
+			};
+		}
+	}
 
-				if (response.StatusCode == HttpStatusCode.NotFound)
-				{
-					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen404NotFound);
-				}
-				else if (response.StatusCode == HttpStatusCode.Unauthorized)
-				{
-					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen401Unauthorized);
-				}
-				else if (response.StatusCode == HttpStatusCode.Forbidden)
-				{
-					return RobotsFile.ConditionalRobots(baseUri, accessRules.AllowAllWhen403Forbidden);
-				}
-				else if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
-				{
-					using (var stream = await response.Content.ReadAsStreamAsync())
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool AreEqual(ReadOnlySpan<char> input, string comparison) => input.Equals(comparison.AsSpan(), StringComparison.OrdinalIgnoreCase);
+
+	private static bool SkipFieldToValue(ref RobotsFileTokenReader reader, out RobotsFileToken token)
+	{
+		if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
+		{
+			goto UnexpectedToken;
+		}
+
+		if (!reader.NextToken(out var expectedWhitespaceOrValue))
+		{
+			goto UnexpectedToken;
+		}
+
+		if (expectedWhitespaceOrValue.TokenType == RobotsFileTokenType.Whitespace)
+		{
+			if (!reader.NextToken(out var expectedValue))
+			{
+				goto UnexpectedToken;
+			}
+			expectedWhitespaceOrValue = expectedValue;
+		}
+
+		if (expectedWhitespaceOrValue.TokenType == RobotsFileTokenType.Value)
+		{
+			token = expectedWhitespaceOrValue;
+			return true;
+		}
+
+		UnexpectedToken:
+		token = default;
+		return false;
+	}
+
+	private void Parse(ReadOnlyMemory<char> value, out IReadOnlyCollection<SiteAccessEntry> siteAccessEntries, out IReadOnlyCollection<SitemapUrlEntry> sitemapEntries)
+	{
+		var reader = new RobotsFileTokenReader(value);
+		var parseState = SiteAccessParseState.Create();
+		
+		var tmpSiteAccessEntries = new List<SiteAccessEntry>();
+		var tmpSitemapEntries = new List<SitemapUrlEntry>();
+
+		RobotsFileToken lastToken = default;
+
+		while (reader.NextToken(out var token))
+		{
+			switch (token.TokenType)
+			{
+				case RobotsFileTokenType.Value:
+					var tokenValue = token.Value.Span;
+					if (AreEqual(tokenValue, Constants.DisallowField))
 					{
-						cancellationToken.ThrowIfCancellationRequested();
-						return await FromStreamAsync(stream, baseUri, cancellationToken);
+						//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
+						if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
+						{
+							parseState.UserAgents.Add(Constants.UserAgentWildcard);
+						}
+
+						//Ensure our next token is a delimiter, otherwise skip the entire line
+						if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
+						{
+							reader.SkipLine();
+							continue;
+						}
+
+						//As long as we have a delimiter, we can accept this as a blank disallow if there are no more tokens
+						if (!reader.NextToken(out token))
+						{
+							goto AcceptBlankDisallow;
+						}
+
+						//Step over whitespace (though if we are at the end, accept it as a blank disallow)
+						if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token))
+						{
+							goto AcceptBlankDisallow;
+						}
+
+						switch (token.TokenType)
+						{
+							//Disallow lines can have an empty value - we detect this by a comment or a new line token
+							case RobotsFileTokenType.NewLine:
+							case RobotsFileTokenType.Comment:
+								goto AcceptBlankDisallow;
+							//If we have a value, parse it as a path
+							case RobotsFileTokenType.Value:
+								if (NoRobotsRfcHelper.TryParsePath(token.Value.Span, out var path))
+								{
+									parseState.PathRules.Add(new SiteAccessPathRule
+									{
+										RuleType = PathRuleType.Disallow,
+										Path = path.ToString()
+									});
+									goto AcceptToken;
+								}
+								break;
+							//Anything else, we ignore the entire declaration
+							default:
+								reader.SkipLine();
+								continue;
+						}
+
+						AcceptBlankDisallow:
+						parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, PathRuleType.Disallow));
+						goto AcceptToken;
 					}
-				}
+					else if (AreEqual(tokenValue, Constants.UserAgentField))
+					{
+						//Reset the state when we have encountered a new "User-agent" field not immediately after another
+						if (!lastToken.Value.IsEmpty && !AreEqual(lastToken.Value.Span, Constants.UserAgentField))
+						{
+							tmpSiteAccessEntries.Add(parseState.AsEntry());
+							parseState.Reset();
+						}
+
+						if (SkipFieldToValue(ref reader, out token) && NoRobotsRfcHelper.TryParseAgent(token.Value.Span, out var agent))
+						{
+							parseState.UserAgents.Add(agent.ToString());
+							goto AcceptToken;
+						}
+
+						reader.SkipLine();
+						continue;
+					}
+					else if (AreEqual(tokenValue, Constants.AllowField))
+					{
+						//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
+						if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
+						{
+							parseState.UserAgents.Add(Constants.UserAgentWildcard);
+						}
+
+						if (SkipFieldToValue(ref reader, out token) && NoRobotsRfcHelper.TryParsePath(token.Value.Span, out var path))
+						{
+							//Ensure an "Allow" value is an "rpath" (aka. starts with a slash)
+							if (path.Length > 0 && path[0] == '/')
+							{
+								parseState.PathRules.Add(new SiteAccessPathRule(path.ToString(), PathRuleType.Allow));
+								goto AcceptToken;
+							}
+						}
+
+						reader.SkipLine();
+						continue;
+					}
+					else if (AreEqual(tokenValue, Constants.CrawlDelayField))
+					{
+						if (SkipFieldToValue(ref reader, out token))
+						{
+							var localTokenValue = token.Value.Span;
+#if NETSTANDARD2_0
+							if (int.TryParse(localTokenValue.ToString(), out var parsedCrawlDelay))
+#else
+							//We can have allocation-free integer parsing in .NET Standard 2.1
+							if (int.TryParse(localTokenValue, out var parsedCrawlDelay))
+#endif
+							{
+								parseState.CrawlDelay = parsedCrawlDelay;
+							}
+						}
+					}
+					else if (AreEqual(tokenValue, Constants.SitemapField))
+					{
+						if (SkipFieldToValue(ref reader, out token))
+						{
+							var tokenString = token.Value.Span.ToString();
+							if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))
+							{
+								tmpSitemapEntries.Add(new SitemapUrlEntry(parsedUri));
+								goto AcceptToken;
+							}
+						}
+						reader.SkipLine();
+						continue;
+					}
+					break;
+				default:
+					//If it doesn't start with a value, skip the line
+					reader.SkipLine();
+					continue;
 			}
-
-			return RobotsFile.AllowAllRobots(baseUri);
+			AcceptToken:
+			lastToken = token;
 		}
 
-		/// <inheritdoc/>
-		public async Task<RobotsFile> FromStreamAsync(Stream stream, Uri baseUri, CancellationToken cancellationToken = default)
-		{
-			var streamReader = new StreamReader(stream);
-			var tokens = await Tokenizer.TokenizeAsync(streamReader, cancellationToken);
-			return FromTokens(tokens, baseUri);
-		}
+		//Add final entry that was being constructed in our state tracker
+		tmpSiteAccessEntries.Add(parseState.AsEntry());
 
-		private RobotsFile FromTokens(IEnumerable<Token> tokens, Uri baseUri)
-		{
-			var validationResult = PatternValidator.Validate(tokens);
-
-			if (validationResult.IsValid)
-			{
-				return new RobotsFile(baseUri)
-				{
-					SiteAccessEntries = TokenParser.GetSiteAccessEntries(tokens),
-					SitemapEntries = TokenParser.GetSitemapUrlEntries(tokens)
-				};
-			}
-
-			return RobotsFile.AllowAllRobots(baseUri);
-		}
+		siteAccessEntries = tmpSiteAccessEntries;
+		sitemapEntries = tmpSitemapEntries;
 	}
 }

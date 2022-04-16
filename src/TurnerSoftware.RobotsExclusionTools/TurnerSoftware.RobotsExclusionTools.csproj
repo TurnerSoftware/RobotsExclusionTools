@@ -8,4 +8,8 @@
     <Authors>James Turner</Authors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+  </ItemGroup>
+
 </Project>

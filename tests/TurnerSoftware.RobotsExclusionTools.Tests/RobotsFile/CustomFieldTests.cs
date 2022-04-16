@@ -23,7 +23,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		{
 			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
 
-			Assert.AreEqual(2, robotsFile.SitemapEntries.Count());
+			Assert.AreEqual(2, robotsFile.SitemapEntries.Count);
 			Assert.AreEqual("http://www.example.org/sitemap.xml", robotsFile.SitemapEntries.First().Sitemap.ToString());
 			Assert.AreEqual("http://www.example.org/sitemap2.xml", robotsFile.SitemapEntries.Last().Sitemap.ToString());
 		}
