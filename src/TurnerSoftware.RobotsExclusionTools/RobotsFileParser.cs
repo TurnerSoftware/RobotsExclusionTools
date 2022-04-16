@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading;
 using System.Runtime.CompilerServices;
 using TurnerSoftware.RobotsExclusionTools.Tokenization;
-using TurnerSoftware.RobotsExclusionTools.Helpers;
 
 namespace TurnerSoftware.RobotsExclusionTools;
 
@@ -109,21 +108,21 @@ public class RobotsFileParser : IRobotsFileParser
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool AreEqual(ReadOnlySpan<char> input, string comparison) => input.Equals(comparison.AsSpan(), StringComparison.OrdinalIgnoreCase);
 
-	private static bool SkipFieldToValue(ref RobotsFileTokenReader reader, out RobotsFileToken token)
+	private static bool SkipFieldToValue(ref RobotsFileTokenReader reader, RobotsFileTokenValueFormat valueFormat, out RobotsFileToken token)
 	{
 		if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
 		{
 			goto UnexpectedToken;
 		}
 
-		if (!reader.NextToken(out var expectedWhitespaceOrValue))
+		if (!reader.NextToken(out var expectedWhitespaceOrValue, valueFormat))
 		{
 			goto UnexpectedToken;
 		}
 
 		if (expectedWhitespaceOrValue.TokenType == RobotsFileTokenType.Whitespace)
 		{
-			if (!reader.NextToken(out var expectedValue))
+			if (!reader.NextToken(out var expectedValue, valueFormat))
 			{
 				goto UnexpectedToken;
 			}
@@ -151,7 +150,7 @@ public class RobotsFileParser : IRobotsFileParser
 
 		RobotsFileToken lastToken = default;
 
-		while (reader.NextToken(out var token))
+		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.Token))
 		{
 			switch (token.TokenType)
 			{
@@ -173,13 +172,13 @@ public class RobotsFileParser : IRobotsFileParser
 						}
 
 						//As long as we have a delimiter, we can accept this as a blank disallow if there are no more tokens
-						if (!reader.NextToken(out token))
+						if (!reader.NextToken(out token, RobotsFileTokenValueFormat.Path))
 						{
 							goto AcceptBlankDisallow;
 						}
 
 						//Step over whitespace (though if we are at the end, accept it as a blank disallow)
-						if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token))
+						if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token, RobotsFileTokenValueFormat.Path))
 						{
 							goto AcceptBlankDisallow;
 						}
@@ -192,16 +191,12 @@ public class RobotsFileParser : IRobotsFileParser
 								goto AcceptBlankDisallow;
 							//If we have a value, parse it as a path
 							case RobotsFileTokenType.Value:
-								if (NoRobotsRfcHelper.TryParsePath(token.Value.Span, out var path))
+								parseState.PathRules.Add(new SiteAccessPathRule
 								{
-									parseState.PathRules.Add(new SiteAccessPathRule
-									{
-										RuleType = PathRuleType.Disallow,
-										Path = path.ToString()
-									});
-									goto AcceptToken;
-								}
-								break;
+									RuleType = PathRuleType.Disallow,
+									Path = token.ToString()
+								});
+								goto AcceptToken;
 							//Anything else, we ignore the entire declaration
 							default:
 								reader.SkipLine();
@@ -221,9 +216,10 @@ public class RobotsFileParser : IRobotsFileParser
 							parseState.Reset();
 						}
 
-						if (SkipFieldToValue(ref reader, out token) && NoRobotsRfcHelper.TryParseAgent(token.Value.Span, out var agent))
+						//The value format "token" is the same syntax as "agent"
+						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Token, out token))
 						{
-							parseState.UserAgents.Add(agent.ToString());
+							parseState.UserAgents.Add(token.ToString());
 							goto AcceptToken;
 						}
 
@@ -238,14 +234,11 @@ public class RobotsFileParser : IRobotsFileParser
 							parseState.UserAgents.Add(Constants.UserAgentWildcard);
 						}
 
-						if (SkipFieldToValue(ref reader, out token) && NoRobotsRfcHelper.TryParsePath(token.Value.Span, out var path))
+						//An allow line requires an "rpath" value
+						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.RPath, out token))
 						{
-							//Ensure an "Allow" value is an "rpath" (aka. starts with a slash)
-							if (path.Length > 0 && path[0] == '/')
-							{
-								parseState.PathRules.Add(new SiteAccessPathRule(path.ToString(), PathRuleType.Allow));
-								goto AcceptToken;
-							}
+							parseState.PathRules.Add(new SiteAccessPathRule(token.ToString(), PathRuleType.Allow));
+							goto AcceptToken;
 						}
 
 						reader.SkipLine();
@@ -253,7 +246,7 @@ public class RobotsFileParser : IRobotsFileParser
 					}
 					else if (AreEqual(tokenValue, Constants.CrawlDelayField))
 					{
-						if (SkipFieldToValue(ref reader, out token))
+						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Value, out token))
 						{
 							var localTokenValue = token.Value.Span;
 #if NETSTANDARD2_0
@@ -269,7 +262,7 @@ public class RobotsFileParser : IRobotsFileParser
 					}
 					else if (AreEqual(tokenValue, Constants.SitemapField))
 					{
-						if (SkipFieldToValue(ref reader, out token))
+						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Value, out token))
 						{
 							var tokenString = token.Value.Span.ToString();
 							if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))
@@ -282,6 +275,8 @@ public class RobotsFileParser : IRobotsFileParser
 						continue;
 					}
 					break;
+				case RobotsFileTokenType.NewLine:
+					goto AcceptToken;
 				default:
 					//If it doesn't start with a value, skip the line
 					reader.SkipLine();

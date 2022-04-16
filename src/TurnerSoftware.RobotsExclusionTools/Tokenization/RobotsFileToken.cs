@@ -12,10 +12,17 @@ public readonly struct RobotsFileToken
 		TokenType = tokenType;
 		Value = value;
 	}
+
+	/// <summary>
+	/// Returns the token value.
+	/// </summary>
+	/// <returns>The token value.</returns>
+	public override string ToString() => Value.Span.ToString();
 }
 
 public enum RobotsFileTokenType
 {
+	Invalid,
 	Value,
 	Comment,
 	Delimiter,
