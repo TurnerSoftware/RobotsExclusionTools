@@ -83,12 +83,11 @@ public struct RobotsFileTokenReader
 			}
 			else
 			{
-				Index = newLineIndex;
+				Index += newLineIndex;
 				if (Current == '\r' && Peek() == '\n')
 				{
 					ReadNext();
 				}
-				ReadNext();
 			}
 		}
 	}
@@ -322,6 +321,7 @@ public struct RobotsFileTokenReader
 		{
 			if (Current == '/')
 			{
+				ReadNext();
 				continue;
 			}
 			else if (NoRobotsRfcHelper.IsPChar(Value.Span.Slice(Index), out var isEscapeSequence))
@@ -334,6 +334,7 @@ public struct RobotsFileTokenReader
 				}
 
 				ReadNext();
+				continue;
 			}
 
 			break;
