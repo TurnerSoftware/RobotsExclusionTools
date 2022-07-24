@@ -6,6 +6,7 @@
     <Description>Robots.txt parsing and querying utility</Description>
     <PackageTags>$(PackageBaseTags)</PackageTags>
     <Authors>James Turner</Authors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

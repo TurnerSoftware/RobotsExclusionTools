@@ -108,21 +108,21 @@ public class RobotsFileParser : IRobotsFileParser
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool AreEqual(ReadOnlySpan<char> input, string comparison) => input.Equals(comparison.AsSpan(), StringComparison.OrdinalIgnoreCase);
 
-	private static bool SkipFieldToValue(ref RobotsFileTokenReader reader, RobotsFileTokenValueFormat valueFormat, out RobotsFileToken token)
+	private static bool SkipFieldToValue(ref RobotsFileTokenReader reader, out RobotsFileToken token)
 	{
 		if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
 		{
 			goto UnexpectedToken;
 		}
 
-		if (!reader.NextToken(out var expectedWhitespaceOrValue, valueFormat))
+		if (!reader.NextToken(out var expectedWhitespaceOrValue))
 		{
 			goto UnexpectedToken;
 		}
 
 		if (expectedWhitespaceOrValue.TokenType == RobotsFileTokenType.Whitespace)
 		{
-			if (!reader.NextToken(out var expectedValue, valueFormat))
+			if (!reader.NextToken(out var expectedValue))
 			{
 				goto UnexpectedToken;
 			}
@@ -150,14 +150,22 @@ public class RobotsFileParser : IRobotsFileParser
 
 		RobotsFileToken lastToken = default;
 
-		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.Token))
+		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
 		{
 			switch (token.TokenType)
 			{
+				case RobotsFileTokenType.Whitespace:
+					continue;
 				case RobotsFileTokenType.Value:
 					var tokenValue = token.Value.Span;
-					if (AreEqual(tokenValue, Constants.DisallowField))
+					if (AreEqual(tokenValue, Constants.DisallowField) || AreEqual(tokenValue, Constants.AllowField))
 					{
+						var ruleType = PathRuleType.Disallow;
+						if (tokenValue[0] is 'A' or 'a')
+						{
+							ruleType = PathRuleType.Allow;
+						}
+
 						//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
 						if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
 						{
@@ -171,29 +179,29 @@ public class RobotsFileParser : IRobotsFileParser
 							continue;
 						}
 
-						//As long as we have a delimiter, we can accept this as a blank disallow if there are no more tokens
-						if (!reader.NextToken(out token, RobotsFileTokenValueFormat.Path))
+						//As long as we have a delimiter, we can accept this as a blank value if there are no more tokens
+						if (!reader.NextToken(out token))
 						{
-							goto AcceptBlankDisallow;
+							goto AcceptBlankValue;
 						}
 
-						//Step over whitespace (though if we are at the end, accept it as a blank disallow)
-						if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token, RobotsFileTokenValueFormat.Path))
+						//Step over whitespace (though if we are at the end, accept it as a blank value)
+						if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token))
 						{
-							goto AcceptBlankDisallow;
+							goto AcceptBlankValue;
 						}
 
 						switch (token.TokenType)
 						{
-							//Disallow lines can have an empty value - we detect this by a comment or a new line token
+							//We can have an empty value - we detect this by a comment or a new line token
 							case RobotsFileTokenType.NewLine:
 							case RobotsFileTokenType.Comment:
-								goto AcceptBlankDisallow;
-							//If we have a value, parse it as a path
-							case RobotsFileTokenType.Value:
+								goto AcceptBlankValue;
+							//If we have a value, check it as a path
+							case RobotsFileTokenType.Value when token.IsValidPath():
 								parseState.PathRules.Add(new SiteAccessPathRule
 								{
-									RuleType = PathRuleType.Disallow,
+									RuleType = ruleType,
 									Path = token.ToString()
 								});
 								goto AcceptToken;
@@ -203,8 +211,8 @@ public class RobotsFileParser : IRobotsFileParser
 								continue;
 						}
 
-						AcceptBlankDisallow:
-						parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, PathRuleType.Disallow));
+						AcceptBlankValue:
+						parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, ruleType));
 						goto AcceptToken;
 					}
 					else if (AreEqual(tokenValue, Constants.UserAgentField))
@@ -217,7 +225,7 @@ public class RobotsFileParser : IRobotsFileParser
 						}
 
 						//The value format "token" is the same syntax as "agent"
-						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Token, out token))
+						if (SkipFieldToValue(ref reader, out token))
 						{
 							parseState.UserAgents.Add(token.ToString());
 							goto AcceptToken;
@@ -226,27 +234,9 @@ public class RobotsFileParser : IRobotsFileParser
 						reader.SkipLine();
 						continue;
 					}
-					else if (AreEqual(tokenValue, Constants.AllowField))
-					{
-						//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
-						if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
-						{
-							parseState.UserAgents.Add(Constants.UserAgentWildcard);
-						}
-
-						//An allow line requires an "rpath" value
-						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.RPath, out token))
-						{
-							parseState.PathRules.Add(new SiteAccessPathRule(token.ToString(), PathRuleType.Allow));
-							goto AcceptToken;
-						}
-
-						reader.SkipLine();
-						continue;
-					}
 					else if (AreEqual(tokenValue, Constants.CrawlDelayField))
 					{
-						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Value, out token))
+						if (SkipFieldToValue(ref reader, out token))
 						{
 							var localTokenValue = token.Value.Span;
 #if NETSTANDARD2_0
@@ -262,7 +252,7 @@ public class RobotsFileParser : IRobotsFileParser
 					}
 					else if (AreEqual(tokenValue, Constants.SitemapField))
 					{
-						if (SkipFieldToValue(ref reader, RobotsFileTokenValueFormat.Value, out token))
+						if (SkipFieldToValue(ref reader, out token))
 						{
 							var tokenString = token.Value.Span.ToString();
 							if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))

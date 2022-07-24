@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
@@ -56,14 +57,7 @@ public struct RobotsFileTokenReader
 			'#' => ReadComment(),
 			'\r' or '\n' => ReadNewLine(),
 			':' => ReadDelimiter(),
-			_ => valueFormat switch
-			{
-				RobotsFileTokenValueFormat.Value => ReadValue(),
-				RobotsFileTokenValueFormat.Token => ReadValueInTokenFormat(),
-				RobotsFileTokenValueFormat.Path => ReadValueInPathFormat(enforceRPath: false),
-				RobotsFileTokenValueFormat.RPath => ReadValueInPathFormat(enforceRPath: true),
-				_ => ReadValue(),
-			}
+			_ => ReadValue(valueFormat)
 		};
 		return true;
 	}
@@ -99,6 +93,53 @@ public struct RobotsFileTokenReader
 		return token;
 	}
 
+	/// <summary>
+	/// Read the next characters in Robots Exclusion Protocol "WS" syntax.
+	/// </summary>
+	/// <remarks>
+	/// <b>Robots Exclusion Protocol</b>
+	/// <code>
+	/// WS	= %x20 / %x09
+	/// </code>
+	/// </remarks>
+	/// <returns></returns>
+	private RobotsFileToken ReadWhitespace()
+	{
+		var startIndex = Index;
+		ReadNext();
+		while (true)
+		{
+			switch (Current)
+			{
+				case ' ':
+				case '\t':
+					ReadNext();
+					continue;
+				default:
+					return CreateToken(RobotsFileTokenType.Whitespace, startIndex);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Read the next characters in Robots Exclusion Protocol "comment" syntax.
+	/// Current implementation ignores UTF-8 character requirement.
+	/// </summary>
+	/// <remarks>
+	/// <b>Robots Exclusion Protocol</b>
+	/// <code>
+	/// comment		= "#" *(UTF8-char-noctl / WS / "#")
+	/// WS			= %x20 / %x09
+	/// UTF8-char-noctl	= UTF8-1-noctl / UTF8-2 / UTF8-3 / UTF8-4
+	/// UTF8-1-noctl		= %x21 / %x22 / %x24-7F ; excluding control, space, '#'
+	/// UTF8-2			= %xC2-DF UTF8-tail
+	/// UTF8-3			= %xE0 %xA0-BF UTF8-tail / %xE1-EC 2UTF8-tail /
+	///					%xED %x80-9F UTF8-tail / %xEE-EF 2UTF8-tail
+	/// UTF8-4			= %xF0 %x90-BF 2UTF8-tail / %xF1-F3 3UTF8-tail /
+	///					%xF4 %x80-8F 2UTF8-tail
+	/// </code>
+	/// </remarks>
+	/// <returns></returns>
 	private RobotsFileToken ReadComment()
 	{
 		var startIndex = Index;
@@ -113,30 +154,22 @@ public struct RobotsFileTokenReader
 		}
 		else
 		{
-			Index = newLineIndex;
+			Index += newLineIndex;
 		}
 
 		return CreateToken(RobotsFileTokenType.Comment, startIndex);
 	}
 
-	private RobotsFileToken ReadWhitespace()
-	{
-		var startIndex = Index;
-		while (true)
-		{
-			ReadNext();
-			switch (Current)
-			{
-				case ' ':
-				case '\t':
-					ReadNext();
-					continue;
-				default:
-					return CreateToken(RobotsFileTokenType.Whitespace, startIndex);
-			}
-		}
-	}
-
+	/// <summary>
+	/// Read the next characters in Robots Exclusion Protocol "NL" syntax.
+	/// </summary>
+	/// <remarks>
+	/// <b>Robots Exclusion Protocol</b>
+	/// <code>
+	/// NL	= %x0D / %x0A / %x0D.0A
+	/// </code>
+	/// </remarks>
+	/// <returns></returns>
 	private RobotsFileToken ReadNewLine()
 	{
 		var startIndex = Index;
@@ -155,34 +188,51 @@ public struct RobotsFileTokenReader
 	}
 
 	/// <summary>
-	/// Read the next characters in NoRobots RFC "value" syntax.
+	/// Read the next characters in Robots Exclusion Protocol "UTF8-char-noctl" syntax.
 	/// </summary>
 	/// <remarks>
-	/// <b>NoRobots RFC</b>
+	/// <b>Robots Exclusion Protocol</b>
 	/// <code>
-	/// value		= &lt;any CHAR except CR or LF or "#"&gt;
-	/// CHAR		= &lt;any US-ASCII character (octets 0 - 127)&gt;
+	/// UTF8-char-noctl	= UTF8-1-noctl / UTF8-2 / UTF8-3 / UTF8-4
+	/// UTF8-1-noctl		= %x21 / %x22 / %x24-7F ; excluding control, space, '#'
+	/// UTF8-2			= %xC2-DF UTF8-tail
+	/// UTF8-3			= %xE0 %xA0-BF UTF8-tail / %xE1-EC 2UTF8-tail /
+	///					%xED %x80-9F UTF8-tail / %xEE-EF 2UTF8-tail
+	/// UTF8-4			= %xF0 %x90-BF 2UTF8-tail / %xF1-F3 3UTF8-tail /
+	///					%xF4 %x80-8F 2UTF8-tail
 	/// </code>
 	/// </remarks>
 	/// <returns></returns>
-	private RobotsFileToken ReadValue()
+	private RobotsFileToken ReadValue(RobotsFileTokenValueFormat valueFormat)
 	{
-		const char ValidCharMax = (char)127;
+		const char UTF8_1_NoCtl_Low = (char)0x21;
 
 		var startIndex = Index;
 		while (true)
 		{
+			//This kinda needs to stop at `:` but not all the time
 			switch (Current)
 			{
 				case EndOfFile:
+				case < UTF8_1_NoCtl_Low:
 				case '#':
-				case '\r':
-				case '\n':
-				case > ValidCharMax:
+				case ':' when valueFormat is RobotsFileTokenValueFormat.RuleName:
 					return CreateToken(RobotsFileTokenType.Value, startIndex);
+				default:
+					if (RobotsExclusionProtocolHelper.TryReadUtf8ByteSequence(Value.Span.Slice(Index), out var numberOfBytes))
+					{
+						ReadNext();
+						if (numberOfBytes > 2)
+						{
+							ReadNext();
+						}
+						continue;
+					}
+					else
+					{
+						return ReadInvalidValue(startIndex);
+					}
 			}
-
-			ReadNext();
 		}
 	}
 
@@ -193,8 +243,6 @@ public struct RobotsFileTokenReader
 	/// <returns></returns>
 	private RobotsFileToken ReadInvalidValue(int startIndex)
 	{
-		const char ValidCharMax = (char)127;
-
 		while (true)
 		{
 			switch (Current)
@@ -203,238 +251,34 @@ public struct RobotsFileTokenReader
 				case '#':
 				case '\r':
 				case '\n':
-				case > ValidCharMax:
 					return CreateToken(RobotsFileTokenType.Invalid, startIndex);
 			}
 
 			ReadNext();
 		}
 	}
-
-	/// <summary>
-	/// Read the next characters in NoRobots RFC "token" syntax.
-	/// </summary>
-	/// <remarks>
-	/// <b>NoRobots RFC</b>
-	/// <code>
-	/// token		= 1*&lt;any CHAR except CTLs or tspecials&gt;
-	/// CHAR		= &lt;any US-ASCII character (octets 0 - 127)&gt;
-	/// CTL		= &lt;any US-ASCII control character (octets 0 - 31) and DEL (127)&gt;
-	/// tspecials	= "(" | ")" | "&lt;" | "&gt;" | "@"
-	///			| "," | ";" | ":" | "\" | &lt;"&gt;
-	///			| "/" | "[" | "]" | "?" | "="
-	///			| "{" | "}" | SP | HT
-	///	</code>
-	/// </remarks>
-	/// <returns></returns>
-	private RobotsFileToken ReadValueInTokenFormat()
-	{
-		//The first and last non-CTL CHAR values
-		const char ValidCharMin = (char)32;
-		const char ValidCharMax = (char)126;
-
-		var startIndex = Index;
-		while (true)
-		{
-			switch (Current)
-			{
-				case EndOfFile:
-				case < ValidCharMin:
-				case > ValidCharMax:
-				case var _ when NoRobotsRfcHelper.IsTSpecial(Current):
-					//As part of "token" - must have at least one "CHAR"
-					if (Index - startIndex > 0)
-					{
-						return CreateToken(RobotsFileTokenType.Value, startIndex);
-					}
-					return ReadInvalidValue(startIndex);
-			}
-
-			ReadNext();
-		}
-	}
-
-	/// <summary>
-	/// Read the next characters in NoRobots RFC "path" (or "rpath") syntax.
-	/// </summary>
-	/// <remarks>
-	/// <b>NoRobots RFC</b>
-	/// <code>
-	/// rpath		= "/" path
-	/// path		= fsegment *( "/" segment )
-	/// fsegment	= 1*pchar
-	/// segment	=  *pchar
-	/// pchar		= uchar | ":" | "@" | "&amp;" | "="
-	/// uchar		= unreserved | escape
-	/// escape		= "%" hex hex
-	/// hex		= digit | "A" | "B" | "C" | "D" | "E" | "F" |
-	///                      "a" | "b" | "c" | "d" | "e" | "f"
-	/// unreserved	= alpha | digit | safe | extra
-	/// alpha		= lowalpha | hialpha
-	/// lowalpha	= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" |
-	///			"j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" |
-	///			"s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-	/// hialpha	= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" |
-	///			"J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" |
-	///			"S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-	/// digit		= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" |
-	///			"8" | "9"
-	/// safe		= "$" | "-" | "_" | "." | "+"
-	/// extra		= "!" | "*" | "'" | "(" | ")" | ","
-	/// </code>
-	/// </remarks>
-	/// <returns></returns>
-	private RobotsFileToken ReadValueInPathFormat(bool enforceRPath)
-	{
-		var startIndex = Index;
-
-		//As part of "rpath" - must have a leading slash
-		if (enforceRPath)
-		{
-			if (Current != '/')
-			{
-				return ReadInvalidValue(startIndex);
-			}
-
-			ReadNext();
-		}
-
-		//As part of "fsegment" - must have at least one "pchar"
-		if (NoRobotsRfcHelper.IsPChar(Value.Span.Slice(Index), out var isFSegmentEscape))
-		{
-			//Escape sequences are 3 characters so we need to skip them
-			if (isFSegmentEscape)
-			{
-				Index += 3;
-			}
-			else
-			{
-				ReadNext();
-			}
-		}
-		else
-		{
-			return ReadInvalidValue(startIndex);
-		}
-
-		while (true)
-		{
-			if (Current == '/')
-			{
-				ReadNext();
-				continue;
-			}
-			else if (NoRobotsRfcHelper.IsPChar(Value.Span.Slice(Index), out var isEscapeSequence))
-			{
-				//Escape sequences are 3 characters so we need to skip them
-				if (isEscapeSequence)
-				{
-					Index += 3;
-					continue;
-				}
-
-				ReadNext();
-				continue;
-			}
-
-			break;
-		}
-
-		return CreateToken(RobotsFileTokenType.Value, startIndex);
-	}
 }
 
-/// <summary>
-/// Specifies the format required for a token value.
-/// </summary>
 public enum RobotsFileTokenValueFormat
 {
 	/// <summary>
-	/// Enforce the format to match the NoRobots RFC "value" syntax.
+	/// Follow the Robots Exclusion Protocol "UTF8-char-noctl" syntax.
 	/// </summary>
 	/// <remarks>
-	/// <b>NoRobots RFC</b>
+	/// <b>Robots Exclusion Protocol</b>
 	/// <code>
-	/// value		= &lt;any CHAR except CR or LF or "#"&gt;
-	/// CHAR		= &lt;any US-ASCII character (octets 0 - 127)&gt;
+	/// UTF8-char-noctl	= UTF8-1-noctl / UTF8-2 / UTF8-3 / UTF8-4
+	/// UTF8-1-noctl		= %x21 / %x22 / %x24-7F ; excluding control, space, '#'
+	/// UTF8-2			= %xC2-DF UTF8-tail
+	/// UTF8-3			= %xE0 %xA0-BF UTF8-tail / %xE1-EC 2UTF8-tail /
+	///					%xED %x80-9F UTF8-tail / %xEE-EF 2UTF8-tail
+	/// UTF8-4			= %xF0 %x90-BF 2UTF8-tail / %xF1-F3 3UTF8-tail /
+	///					%xF4 %x80-8F 2UTF8-tail
 	/// </code>
 	/// </remarks>
 	Value,
 	/// <summary>
-	/// Enforce the format to match the NoRobots RFC "token" syntax.
-	/// The values "User-agent", "Disallow" etc are examples of a "token".
+	/// Same as <see cref="Value"/> but additionally will stop at the first delimiter (<c>:</c>) found.
 	/// </summary>
-	/// <remarks>
-	/// <b>NoRobots RFC</b>
-	/// <code>
-	/// token		= 1*&lt;any CHAR except CTLs or tspecials&gt;
-	/// CHAR		= &lt;any US-ASCII character (octets 0 - 127)&gt;
-	/// CTL		= &lt;any US-ASCII control character (octets 0 - 31) and DEL (127)&gt;
-	/// tspecials	= "(" | ")" | "&lt;" | "&gt;" | "@"
-	///			| "," | ";" | ":" | "\" | &lt;"&gt;
-	///			| "/" | "[" | "]" | "?" | "="
-	///			| "{" | "}" | SP | HT
-	///	</code>
-	/// </remarks>
-	Token,
-	/// <summary>
-	/// Enforce the format to match the NoRobots RFC "path" syntax.
-	/// </summary>
-	/// <remarks>
-	/// <b>NoRobots RFC</b>
-	/// <code>
-	/// path		= fsegment *( "/" segment )
-	/// fsegment	= 1*pchar
-	/// segment	=  *pchar
-	/// pchar		= uchar | ":" | "@" | "&amp;" | "="
-	/// uchar		= unreserved | escape
-	/// escape		= "%" hex hex
-	/// hex		= digit | "A" | "B" | "C" | "D" | "E" | "F" |
-	///                      "a" | "b" | "c" | "d" | "e" | "f"
-	/// unreserved	= alpha | digit | safe | extra
-	/// alpha		= lowalpha | hialpha
-	/// lowalpha	= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" |
-	///			"j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" |
-	///			"s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-	/// hialpha	= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" |
-	///			"J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" |
-	///			"S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-	/// digit		= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" |
-	///			"8" | "9"
-	/// safe		= "$" | "-" | "_" | "." | "+"
-	/// extra		= "!" | "*" | "'" | "(" | ")" | ","
-	/// </code>
-	/// </remarks>
-	Path,
-	/// <summary>
-	/// Enforce the format to match the NoRobots RFC "rpath" syntax.
-	/// This is the same as "path" syntax but with a leading slash.
-	/// </summary>
-	/// <remarks>
-	/// <b>NoRobots RFC</b>
-	/// <code>
-	/// rpath		= "/" path
-	/// path		= fsegment *( "/" segment )
-	/// fsegment	= 1*pchar
-	/// segment	=  *pchar
-	/// pchar		= uchar | ":" | "@" | "&amp;" | "="
-	/// uchar		= unreserved | escape
-	/// escape		= "%" hex hex
-	/// hex		= digit | "A" | "B" | "C" | "D" | "E" | "F" |
-	///                      "a" | "b" | "c" | "d" | "e" | "f"
-	/// unreserved	= alpha | digit | safe | extra
-	/// alpha		= lowalpha | hialpha
-	/// lowalpha	= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" |
-	///			"j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" |
-	///			"s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-	/// hialpha	= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" |
-	///			"J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" |
-	///			"S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-	/// digit		= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" |
-	///			"8" | "9"
-	/// safe		= "$" | "-" | "_" | "." | "+"
-	/// extra		= "!" | "*" | "'" | "(" | ")" | ","
-	/// </code>
-	/// </remarks>
-	RPath
+	RuleName
 }
