@@ -37,9 +37,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 			Assert.IsTrue(definition.CanIndex("GoogleBot/2.5"));
 			Assert.IsTrue(definition.CanFollowLinks("GoogleBot/2.5"));
 			Assert.IsFalse(definition.CanIndex("OtherBot/2.0"));
-			Assert.IsFalse(definition.CanFollowLinks("OtherBot/2.0"));
+			Assert.IsTrue(definition.CanFollowLinks("OtherBot/2.0"));
 			Assert.IsTrue(definition.CanIndex("SomeBot/1.0"));
-			Assert.IsFalse(definition.CanFollowLinks("SomeBot/1.0"));
+			Assert.IsTrue(definition.CanFollowLinks("SomeBot/1.0"));
 		}
 	}
 }
