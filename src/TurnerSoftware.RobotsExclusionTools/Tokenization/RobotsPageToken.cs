@@ -2,17 +2,7 @@
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-public readonly struct RobotsPageToken
-{
-	public readonly RobotsPageTokenType TokenType;
-	public readonly ReadOnlyMemory<char> Value;
-
-	public RobotsPageToken(RobotsPageTokenType tokenType, ReadOnlyMemory<char> value)
-	{
-		TokenType = tokenType;
-		Value = value;
-	}
-}
+public readonly record struct RobotsPageToken(RobotsPageTokenType TokenType, ReadOnlyMemory<char> Value);
 
 public enum RobotsPageTokenType
 {
