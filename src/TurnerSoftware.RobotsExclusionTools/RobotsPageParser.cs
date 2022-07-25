@@ -155,8 +155,11 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 				case RobotsPageTokenType.DirectiveDelimiter:
 					continue;
 				case RobotsPageTokenType.FieldValueDelimiter:
-					//Unexpected token type - read till the next directive delimiter
-					ReadTillNextDirective(ref reader);
+					if (parseState is not ParseState.Value)
+					{
+						//Unexpected token type - read till the next directive delimiter
+						ReadTillNextDirective(ref reader);
+					}
 					continue;
 			}
 		}
