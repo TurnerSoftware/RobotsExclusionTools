@@ -42,7 +42,7 @@ public struct RobotsPageTokenReader
 
 		token = Current switch
 		{
-			' ' or '\t' => ReadWhitespace(),
+			' ' or '\t' or '\r' or '\n' => ReadWhitespace(),
 			':' => ReadChar(RobotsPageTokenType.FieldValueDelimiter),
 			',' => ReadChar(RobotsPageTokenType.DirectiveDelimiter),
 			_ => ReadValue()
@@ -73,6 +73,8 @@ public struct RobotsPageTokenReader
 			{
 				case ' ':
 				case '\t':
+				case '\r':
+				case '\n':
 					ReadNext();
 					continue;
 				default:
@@ -94,6 +96,8 @@ public struct RobotsPageTokenReader
 				case ',':
 				case ' ':
 				case '\t':
+				case '\r':
+				case '\n':
 					return CreateToken(RobotsPageTokenType.Value, startIndex);
 			}
 		}
