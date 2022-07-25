@@ -16,7 +16,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 			}
 
 			//If no entry is defined, the robot is allowed access by default
-			if (accessEntry == null)
+			if (accessEntry == default)
 			{
 				return true;
 			}

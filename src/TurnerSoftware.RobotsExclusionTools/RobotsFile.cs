@@ -52,27 +52,34 @@ public record class RobotsFile
 			uri = new Uri(BaseUri, uri);
 		}
 
-		var entry = GetEntryForUserAgent(userAgent);
-		return PathComparisonUtility.IsAllowed(entry, uri);
+		if (TryGetEntryForUserAgent(userAgent, out var siteAccessEntry))
+		{
+			return PathComparisonUtility.IsAllowed(siteAccessEntry, uri);
+		}
+
+		//If no entry is defined, the robot is allowed access by default
+		return true;
 	}
 
-	public SiteAccessEntry GetEntryForUserAgent(string userAgent)
+	public bool TryGetEntryForUserAgent(string userAgent, out SiteAccessEntry matchingAccessEntry)
 	{
-		SiteAccessEntry globalEntry = default;
+		SiteAccessEntry? globalEntry = default;
 
 		foreach (var siteAccessEntry in SiteAccessEntries)
 		{
-			if (globalEntry.UserAgents is null && siteAccessEntry.UserAgents.Any(u => u == "*"))
+			if (!globalEntry.HasValue && siteAccessEntry.UserAgents.Contains(Constants.UserAgentWildcard))
 			{
 				globalEntry = siteAccessEntry;
 			}
 
 			if (siteAccessEntry.UserAgents.Any(u => userAgent.IndexOf(u, StringComparison.InvariantCultureIgnoreCase) != -1))
 			{
-				return siteAccessEntry;
+				matchingAccessEntry = siteAccessEntry;
+				return true;
 			}
 		}
 
-		return globalEntry;
+		matchingAccessEntry = globalEntry ?? default;
+		return globalEntry.HasValue;
 	}
 }

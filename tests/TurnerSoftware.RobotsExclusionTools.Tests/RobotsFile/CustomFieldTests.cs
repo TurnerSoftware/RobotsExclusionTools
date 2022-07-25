@@ -15,7 +15,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
 			var userAgent = "AnyUserAgent";
 
-			Assert.AreEqual(60, robotsFile.GetEntryForUserAgent(userAgent).CrawlDelay);
+			Assert.IsTrue(robotsFile.TryGetEntryForUserAgent(userAgent, out var entry));
+			Assert.AreEqual(60, entry.CrawlDelay);
 		}
 
 		[TestMethod]
