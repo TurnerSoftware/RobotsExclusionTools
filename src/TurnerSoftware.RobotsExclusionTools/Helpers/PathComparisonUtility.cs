@@ -115,7 +115,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 					}
 
 					var offsetPath = path.Slice(index);
-					var nextIndex = offsetPath.IndexOf('*');
+					var nextIndex = offsetPath.IndexOf(WildcardSpecialCharacter);
 
 					if (nextIndex == -1)
 					{
