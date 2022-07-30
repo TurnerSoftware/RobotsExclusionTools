@@ -82,7 +82,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 					return false;
 				}
 
-				offsetPosition += sourcePiece.Length;
+				offsetPosition += indexPosition + sourcePiece.Length;
 			}
 
 			if (mustMatchToEnd)
@@ -115,22 +115,22 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 					}
 
 					var offsetPath = path.Slice(index);
-					var nextIndex = offsetPath.IndexOf(WildcardSpecialCharacter);
+					var nextOffsetIndex = offsetPath.IndexOf(WildcardSpecialCharacter);
 
-					if (nextIndex == -1)
+					if (nextOffsetIndex == -1)
 					{
 						value = offsetPath;
 						index += offsetPath.Length;
 						return true;
 					}
-					else if (nextIndex == 0)
+					else if (nextOffsetIndex == 0)
 					{
 						index++;
 						continue;
 					}
 
-					value = offsetPath.Slice(0, nextIndex);
-					index = nextIndex + 1;
+					value = offsetPath.Slice(0, nextOffsetIndex);
+					index += nextOffsetIndex + 1;
 					return true;
 				}
 			}

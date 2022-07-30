@@ -40,6 +40,9 @@ Disallow: /org/planb.html*$
 User-agent: OnlyWildcard
 Disallow: /org/plan.html
 Allow: *
+
+User-agent: DoubleWildcard
+Disallow: /org/*/*
   		    
 Sitemap: http://www.example.org/sitemap2.xml
 
