@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,26 +13,15 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers;
 public static class StreamLineReader
 {
 	private const byte NewLineChar = (byte)'\n';
+	private static readonly StreamPipeReaderOptions Options = new(leaveOpen: true);
 
-	public static IAsyncEnumerable<ReadOnlySequence<byte>> EnumerateLinesAsync(Stream stream, CancellationToken cancellationToken = default)
-	{
-		var pipe = new Pipe();
-		var pipeWriterTask = FillPipeAsync(stream, pipe.Writer, cancellationToken);
-		return ReadPipeAsync(pipeWriterTask, pipe.Reader, cancellationToken);
-	}
-
-	private static async Task FillPipeAsync(Stream stream, PipeWriter writer, CancellationToken cancellationToken)
-	{
-		await stream.CopyToAsync(writer, cancellationToken);
-		writer.Complete();
-	}
-
-	private static async IAsyncEnumerable<ReadOnlySequence<byte>> ReadPipeAsync(
-		Task pipeWriterTask, 
-		PipeReader reader, 
-		[EnumeratorCancellation] CancellationToken cancellationToken
+	public static async IAsyncEnumerable<ReadOnlySequence<byte>> EnumerateLinesOfBytesAsync(
+		Stream stream,
+		[EnumeratorCancellation] CancellationToken cancellationToken = default
 	)
 	{
+		var reader = PipeReader.Create(stream, Options);
+
 		while (true)
 		{
 			var result = await reader.ReadAsync(cancellationToken);
@@ -62,6 +52,58 @@ public static class StreamLineReader
 		}
 
 		reader.Complete();
-		await pipeWriterTask;
+	}
+
+	public static async IAsyncEnumerable<ReadOnlyMemory<char>> EnumerateLinesOfCharsAsync(
+		Stream stream,
+		[EnumeratorCancellation] CancellationToken cancellationToken = default
+	)
+	{
+		await foreach (var lineSequence in EnumerateLinesOfBytesAsync(stream, cancellationToken))
+		{
+			var numberOfBytes = (int)lineSequence.Length;
+			var charArray = ArrayPool<char>.Shared.Rent(numberOfBytes);
+			try
+			{
+				var numberOfChars = GetUtf8Chars(lineSequence, charArray);
+				yield return charArray.AsMemory(0, numberOfChars);
+			}
+			finally
+			{
+				ArrayPool<char>.Shared.Return(charArray);
+			}
+		}
+	}
+
+	private static int GetUtf8Chars(ReadOnlySequence<byte> source, char[] destination)
+	{
+		var numberOfBytes = (int)source.Length;
+		byte[] byteArray = null;
+		try
+		{
+#if NETSTANDARD2_0
+			byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
+			source.CopyTo(byteArray);
+			return Encoding.UTF8.GetChars(byteArray, 0, numberOfBytes, destination, 0);
+#else
+			if (source.IsSingleSegment)
+			{
+				return Encoding.UTF8.GetChars(source.FirstSpan, destination);
+			}
+			else
+			{
+				byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
+				source.CopyTo(byteArray);
+				return Encoding.UTF8.GetChars(byteArray, destination);
+			}
+#endif
+		}
+		finally
+		{
+			if (byteArray is not null)
+			{
+				ArrayPool<byte>.Shared.Return(byteArray);
+			}
+		}
 	}
 }

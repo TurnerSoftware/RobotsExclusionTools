@@ -81,37 +81,20 @@ public class RobotsFileParser : IRobotsFileParser
 
 		RobotsFileToken lastToken = default;
 
-		await foreach (var lineSequence in StreamLineReader.EnumerateLinesAsync(stream, cancellationToken))
+		await foreach (var charLine in StreamLineReader.EnumerateLinesOfCharsAsync(stream, cancellationToken))
 		{
-			var numberOfBytes = (int)lineSequence.Length;
-			var byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
-			var charArray = ArrayPool<char>.Shared.Rent(numberOfBytes);
-
-			try
+			var reader = new RobotsFileTokenReader(charLine);
+			if (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
 			{
-				lineSequence.CopyTo(byteArray.AsSpan(0, numberOfBytes));
-				var numberOfChars = Encoding.UTF8.GetChars(byteArray, 0, numberOfBytes, charArray, 0);
-				var charLine = charArray.AsMemory(0, numberOfChars);
-
-				//Do work here
-				var reader = new RobotsFileTokenReader(charLine);
-				if (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
+				var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState, ref lastToken);
+				if (accessEntry.HasValue)
 				{
-					var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState, ref lastToken);
-					if (accessEntry.HasValue)
-					{
-						tmpSiteAccessEntries.Add(accessEntry.Value);
-					}
-					else if (sitemapEntry.HasValue)
-					{
-						tmpSitemapEntries.Add(sitemapEntry.Value);
-					}
+					tmpSiteAccessEntries.Add(accessEntry.Value);
 				}
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(byteArray);
-				ArrayPool<char>.Shared.Return(charArray);
+				else if (sitemapEntry.HasValue)
+				{
+					tmpSitemapEntries.Add(sitemapEntry.Value);
+				}
 			}
 		}
 
