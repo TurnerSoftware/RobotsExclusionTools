@@ -27,9 +27,32 @@ public class RobotsFileParser : IRobotsFileParser
 	/// <inheritdoc/>
 	public RobotsFile FromString(string robotsText, Uri baseUri)
 	{
-		//Parse(robotsText.AsMemory(), out var siteAccessEntries, out var sitemapEntries);
-		Parse2(robotsText.AsMemory(), out var siteAccessEntries, out var sitemapEntries);
-		return new RobotsFile(baseUri, siteAccessEntries, sitemapEntries);
+		var reader = new RobotsFileTokenReader(robotsText.AsMemory());
+		var parseState = SiteAccessParseState.Create();
+
+		var tmpSiteAccessEntries = new List<SiteAccessEntry>();
+		var tmpSitemapEntries = new List<SitemapUrlEntry>();
+
+		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
+		{
+			var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState);
+			if (accessEntry.HasValue)
+			{
+				tmpSiteAccessEntries.Add(accessEntry.Value);
+			}
+			else if (sitemapEntry.HasValue)
+			{
+				tmpSitemapEntries.Add(sitemapEntry.Value);
+			}
+		}
+
+		//Add final entry that was being constructed in our state tracker
+		if (parseState.TryGetEntry(out var finalAccessEntry))
+		{
+			tmpSiteAccessEntries.Add(finalAccessEntry);
+		}
+
+		return new RobotsFile(baseUri, tmpSiteAccessEntries, tmpSitemapEntries);
 	}
 
 	/// <inheritdoc/>
@@ -79,14 +102,12 @@ public class RobotsFileParser : IRobotsFileParser
 		var tmpSiteAccessEntries = new List<SiteAccessEntry>();
 		var tmpSitemapEntries = new List<SitemapUrlEntry>();
 
-		RobotsFileToken lastToken = default;
-
 		await foreach (var charLine in StreamLineReader.EnumerateLinesOfCharsAsync(stream, cancellationToken))
 		{
 			var reader = new RobotsFileTokenReader(charLine);
 			if (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
 			{
-				var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState, ref lastToken);
+				var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState);
 				if (accessEntry.HasValue)
 				{
 					tmpSiteAccessEntries.Add(accessEntry.Value);
@@ -112,6 +133,7 @@ public class RobotsFileParser : IRobotsFileParser
 		public List<string> UserAgents { get; private set; }
 		public List<SiteAccessPathRule> PathRules { get; private set; }
 		public int? CrawlDelay { get; set; }
+		public bool HasSeenRule { get; set; }
 
 		public static SiteAccessParseState Create() => new()
 		{
@@ -124,6 +146,7 @@ public class RobotsFileParser : IRobotsFileParser
 			UserAgents.Clear();
 			PathRules.Clear();
 			CrawlDelay = null;
+			HasSeenRule = false;
 		}
 
 		public bool TryGetEntry(out SiteAccessEntry accessEntry)
@@ -189,24 +212,41 @@ public class RobotsFileParser : IRobotsFileParser
 		return false;
 	}
 
-	private void Parse(ReadOnlyMemory<char> value, out IReadOnlyCollection<SiteAccessEntry> siteAccessEntries, out IReadOnlyCollection<SitemapUrlEntry> sitemapEntries)
+	private static (SiteAccessEntry? accessEntry, SitemapUrlEntry? sitemapEntry) ProcessLine(RobotsFileToken token, ref RobotsFileTokenReader reader, ref SiteAccessParseState parseState)
 	{
-		var reader = new RobotsFileTokenReader(value);
-		var parseState = SiteAccessParseState.Create();
-		
-		var tmpSiteAccessEntries = new List<SiteAccessEntry>();
-		var tmpSitemapEntries = new List<SitemapUrlEntry>();
+		SiteAccessEntry? accessEntry = default;
+		SitemapUrlEntry? sitemapEntry = default;
 
-		RobotsFileToken lastToken = default;
-
-		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
+		if (token.TokenType is RobotsFileTokenType.Whitespace && !reader.NextToken(out token, RobotsFileTokenValueFormat.RuleName))
 		{
-			switch (token.TokenType)
-			{
-				case RobotsFileTokenType.Whitespace:
-					continue;
-				case RobotsFileTokenType.Value:
-					var tokenValue = token.Value.Span;
+			goto RejectLine;
+		}
+
+		switch (token.TokenType)
+		{
+			case RobotsFileTokenType.Value:
+				var tokenValue = token.Value.Span;
+				if (AreEqual(tokenValue, Constants.UserAgentField))
+				{
+					//Reset the state when we have encountered a new "User-agent" field not immediately after another
+					if (parseState.HasSeenRule && parseState.TryGetEntry(out var localAccessEntry))
+					{
+						accessEntry = localAccessEntry;
+						parseState.Reset();
+					}
+
+					if (SkipFieldToValue(ref reader, out token) && token.IsValidIdentifier())
+					{
+						parseState.UserAgents.Add(token.ToString());
+						goto AcceptToken;
+					}
+
+					reader.SkipLine();
+					goto RejectLine;
+				}
+				else
+				{
+					parseState.HasSeenRule = true;
 					if (AreEqual(tokenValue, Constants.DisallowField) || AreEqual(tokenValue, Constants.AllowField))
 					{
 						var ruleType = PathRuleType.Disallow;
@@ -216,7 +256,7 @@ public class RobotsFileParser : IRobotsFileParser
 						}
 
 						//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
-						if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
+						if (parseState.UserAgents.Count == 0)
 						{
 							parseState.UserAgents.Add(Constants.UserAgentWildcard);
 						}
@@ -225,7 +265,7 @@ public class RobotsFileParser : IRobotsFileParser
 						if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
 						{
 							reader.SkipLine();
-							continue;
+							goto RejectLine;
 						}
 
 						//As long as we have a delimiter, we can accept this as a blank value if there are no more tokens
@@ -257,43 +297,19 @@ public class RobotsFileParser : IRobotsFileParser
 							//Anything else, we ignore the entire declaration
 							default:
 								reader.SkipLine();
-								continue;
+								goto RejectLine;
 						}
 
 						AcceptBlankValue:
 						parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, ruleType));
 						goto AcceptToken;
 					}
-					else if (AreEqual(tokenValue, Constants.UserAgentField))
-					{
-						//Reset the state when we have encountered a new "User-agent" field not immediately after another
-						if (!lastToken.Value.IsEmpty && !AreEqual(lastToken.Value.Span, Constants.UserAgentField))
-						{
-							tmpSiteAccessEntries.Add(parseState.AsEntry());
-							parseState.Reset();
-						}
-
-						//The value format "token" is the same syntax as "agent"
-						if (SkipFieldToValue(ref reader, out token))
-						{
-							parseState.UserAgents.Add(token.ToString());
-							goto AcceptToken;
-						}
-
-						reader.SkipLine();
-						continue;
-					}
 					else if (AreEqual(tokenValue, Constants.CrawlDelayField))
 					{
 						if (SkipFieldToValue(ref reader, out token))
 						{
 							var localTokenValue = token.Value.Span;
-#if NETSTANDARD2_0
-							if (int.TryParse(localTokenValue.ToString(), out var parsedCrawlDelay))
-#else
-							//We can have allocation-free integer parsing in .NET Standard 2.1
-							if (int.TryParse(localTokenValue, out var parsedCrawlDelay))
-#endif
+							if (PerfUtilities.TryParseInteger(localTokenValue, out var parsedCrawlDelay))
 							{
 								parseState.CrawlDelay = parsedCrawlDelay;
 							}
@@ -306,187 +322,13 @@ public class RobotsFileParser : IRobotsFileParser
 							var tokenString = token.Value.Span.ToString();
 							if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))
 							{
-								tmpSitemapEntries.Add(new SitemapUrlEntry(parsedUri));
+								sitemapEntry = new SitemapUrlEntry(parsedUri);
 								goto AcceptToken;
 							}
 						}
 						reader.SkipLine();
-						continue;
-					}
-					break;
-				case RobotsFileTokenType.NewLine:
-					goto AcceptToken;
-				default:
-					//If it doesn't start with a value, skip the line
-					reader.SkipLine();
-					continue;
-			}
-			AcceptToken:
-			lastToken = token;
-		}
-
-		//Add final entry that was being constructed in our state tracker
-		tmpSiteAccessEntries.Add(parseState.AsEntry());
-
-		siteAccessEntries = tmpSiteAccessEntries;
-		sitemapEntries = tmpSitemapEntries;
-	}
-
-	private void Parse2(ReadOnlyMemory<char> value, out IReadOnlyCollection<SiteAccessEntry> siteAccessEntries, out IReadOnlyCollection<SitemapUrlEntry> sitemapEntries)
-	{
-		var reader = new RobotsFileTokenReader(value);
-		var parseState = SiteAccessParseState.Create();
-
-		var tmpSiteAccessEntries = new List<SiteAccessEntry>();
-		var tmpSitemapEntries = new List<SitemapUrlEntry>();
-
-		RobotsFileToken lastToken = default;
-
-		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
-		{
-			var (accessEntry, sitemapEntry) = ProcessLine(token, ref reader, ref parseState, ref lastToken);
-			if (accessEntry.HasValue)
-			{
-				tmpSiteAccessEntries.Add(accessEntry.Value);
-			}
-			else if (sitemapEntry.HasValue)
-			{
-				tmpSitemapEntries.Add(sitemapEntry.Value);
-			}
-		}
-
-		//Add final entry that was being constructed in our state tracker
-		if (parseState.TryGetEntry(out var finalAccessEntry))
-		{
-			tmpSiteAccessEntries.Add(finalAccessEntry);
-		}
-
-		siteAccessEntries = tmpSiteAccessEntries;
-		sitemapEntries = tmpSitemapEntries;
-	}
-
-	private static (SiteAccessEntry? accessEntry, SitemapUrlEntry? sitemapEntry) ProcessLine(RobotsFileToken token, ref RobotsFileTokenReader reader, ref SiteAccessParseState parseState, ref RobotsFileToken lastToken)
-	{
-		SiteAccessEntry? accessEntry = default;
-		SitemapUrlEntry? sitemapEntry = default;
-
-		if (token.TokenType is RobotsFileTokenType.Whitespace && !reader.NextToken(out token, RobotsFileTokenValueFormat.RuleName))
-		{
-			goto RejectLine;
-		}
-
-		switch (token.TokenType)
-		{
-			case RobotsFileTokenType.Value:
-				var tokenValue = token.Value.Span;
-				if (AreEqual(tokenValue, Constants.DisallowField) || AreEqual(tokenValue, Constants.AllowField))
-				{
-					var ruleType = PathRuleType.Disallow;
-					if (tokenValue[0] is 'A' or 'a')
-					{
-						ruleType = PathRuleType.Allow;
-					}
-
-					//When we have seen a field for the first time that isn't a "User-agent", default to any user agent (written as "*")
-					if (lastToken.Value.IsEmpty && parseState.UserAgents.Count == 0)
-					{
-						parseState.UserAgents.Add(Constants.UserAgentWildcard);
-					}
-
-					//Ensure our next token is a delimiter, otherwise skip the entire line
-					if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsFileTokenType.Delimiter)
-					{
-						reader.SkipLine();
 						goto RejectLine;
 					}
-
-					//As long as we have a delimiter, we can accept this as a blank value if there are no more tokens
-					if (!reader.NextToken(out token))
-					{
-						goto AcceptBlankValue;
-					}
-
-					//Step over whitespace (though if we are at the end, accept it as a blank value)
-					if (token.TokenType == RobotsFileTokenType.Whitespace && !reader.NextToken(out token))
-					{
-						goto AcceptBlankValue;
-					}
-
-					switch (token.TokenType)
-					{
-						//We can have an empty value - we detect this by a comment or a new line token
-						case RobotsFileTokenType.NewLine:
-						case RobotsFileTokenType.Comment:
-							goto AcceptBlankValue;
-						//If we have a value, check it as a path
-						case RobotsFileTokenType.Value when token.IsValidPath():
-							parseState.PathRules.Add(new SiteAccessPathRule
-							{
-								RuleType = ruleType,
-								Path = token.ToString()
-							});
-							goto AcceptToken;
-						//Anything else, we ignore the entire declaration
-						default:
-							reader.SkipLine();
-							goto RejectLine;
-					}
-
-					AcceptBlankValue:
-					parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, ruleType));
-					goto AcceptToken;
-				}
-				else if (AreEqual(tokenValue, Constants.UserAgentField))
-				{
-					//Reset the state when we have encountered a new "User-agent" field not immediately after another
-					if (!lastToken.Value.IsEmpty && !AreEqual(lastToken.Value.Span, Constants.UserAgentField))
-					{
-						if (parseState.TryGetEntry(out var localAccessEntry))
-						{
-							accessEntry = localAccessEntry;
-							parseState.Reset();
-						}
-					}
-
-					//The value format "token" is the same syntax as "agent"
-					if (SkipFieldToValue(ref reader, out token))
-					{
-						parseState.UserAgents.Add(token.ToString());
-						goto AcceptToken;
-					}
-
-					reader.SkipLine();
-					goto RejectLine;
-				}
-				else if (AreEqual(tokenValue, Constants.CrawlDelayField))
-				{
-					if (SkipFieldToValue(ref reader, out token))
-					{
-						var localTokenValue = token.Value.Span;
-#if NETSTANDARD2_0
-						if (int.TryParse(localTokenValue.ToString(), out var parsedCrawlDelay))
-#else
-						//We can have allocation-free integer parsing in .NET Standard 2.1
-						if (int.TryParse(localTokenValue, out var parsedCrawlDelay))
-#endif
-						{
-							parseState.CrawlDelay = parsedCrawlDelay;
-						}
-					}
-				}
-				else if (AreEqual(tokenValue, Constants.SitemapField))
-				{
-					if (SkipFieldToValue(ref reader, out token))
-					{
-						var tokenString = token.Value.Span.ToString();
-						if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))
-						{
-							sitemapEntry = new SitemapUrlEntry(parsedUri);
-							goto AcceptToken;
-						}
-					}
-					reader.SkipLine();
-					goto RejectLine;
 				}
 				break;
 			case RobotsFileTokenType.NewLine:
@@ -497,7 +339,6 @@ public class RobotsFileParser : IRobotsFileParser
 				goto RejectLine;
 		}
 		AcceptToken:
-		lastToken = token;
 		return (accessEntry, sitemapEntry);
 		RejectLine:
 		return (default, default);
