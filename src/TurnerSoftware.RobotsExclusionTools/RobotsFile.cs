@@ -69,7 +69,7 @@ public record class RobotsFile
 
 		foreach (var siteAccessEntry in SiteAccessEntries)
 		{
-			if (!globalEntry.HasValue && siteAccessEntry.UserAgents.Contains(Constants.UserAgentWildcard))
+			if (siteAccessEntry.UserAgents.Contains(Constants.UserAgentWildcard))
 			{
 				globalEntry = siteAccessEntry;
 			}
