@@ -192,12 +192,14 @@ public class RobotsFileParser : IRobotsFileParser
 			var tokenValue = token.Value.Span;
 			if (AreEqual(tokenValue, Constants.UserAgentField))
 			{
-				parseState.CaptureEntry();
+				if (parseState.HasSeenRule)
+				{
+					parseState.CaptureEntry();
+				}
 
 				if (TrySkipFieldToValue(ref reader, out token) && token.IsValidIdentifier())
 				{
 					parseState.UserAgents.Add(token.ToString());
-					return;
 				}
 
 				reader.SkipLine();
@@ -251,6 +253,7 @@ public class RobotsFileParser : IRobotsFileParser
 								RuleType = ruleType,
 								Path = token.ToString()
 							});
+							reader.SkipLine();
 							return;
 						//Anything else, we ignore the entire declaration
 						default:
@@ -261,6 +264,7 @@ public class RobotsFileParser : IRobotsFileParser
 					AcceptBlankValue:
 					parseState.HasSeenRule = true;
 					parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, ruleType));
+					reader.SkipLine();
 				}
 				else if (AreEqual(tokenValue, Constants.CrawlDelayField))
 				{
@@ -273,6 +277,7 @@ public class RobotsFileParser : IRobotsFileParser
 							parseState.CrawlDelay = parsedCrawlDelay;
 						}
 					}
+					reader.SkipLine();
 				}
 				else if (AreEqual(tokenValue, Constants.SitemapField))
 				{
@@ -283,7 +288,6 @@ public class RobotsFileParser : IRobotsFileParser
 						{
 							parseState.HasSeenRule = true;
 							parseState.SitemapUrlEntries.Add(new SitemapUrlEntry(parsedUri));
-							return;
 						}
 					}
 					reader.SkipLine();
