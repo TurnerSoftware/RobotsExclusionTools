@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
+[DebuggerDisplay("Type = {TokenType}; Value = {Value}")]
 public readonly struct RobotsFileToken
 {
 	public readonly RobotsFileTokenType TokenType;

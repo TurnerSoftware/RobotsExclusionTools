@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
 namespace TurnerSoftware.RobotsExclusionTools;
 
+[DebuggerDisplay("BaseUri = {BaseUri}; SiteAccessEntries = {SiteAccessEntries.Count}; SitemapEntries = {SitemapEntries.Count}")]
 public record class RobotsFile
 {
 	public Uri BaseUri { get; }

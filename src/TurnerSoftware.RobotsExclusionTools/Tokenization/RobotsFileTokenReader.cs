@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
+[DebuggerDisplay("Index = {Index}; Current = {Current}")]
 public struct RobotsFileTokenReader
 {
 	private const char EndOfFile = char.MinValue;

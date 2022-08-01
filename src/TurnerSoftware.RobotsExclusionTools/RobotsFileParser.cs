@@ -144,6 +144,8 @@ public class RobotsFileParser : IRobotsFileParser
 			CrawlDelay = null;
 			HasSeenRule = false;
 		}
+
+		public override string ToString() => $"TrackedState = (UAs: {UserAgents.Count}, HasSeenRule: {HasSeenRule}); SiteAccessEntries = {siteAccessEntries.Count}; SitemapUrlEntries = {SitemapUrlEntries.Count}";
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
