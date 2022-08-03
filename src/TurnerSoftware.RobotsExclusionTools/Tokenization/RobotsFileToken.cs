@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-[DebuggerDisplay("Type = {TokenType}; Value = {Value}")]
+[DebuggerDisplay("Type = {TokenType}; Value = {ToString()}")]
 public readonly record struct RobotsFileToken
 {
 	public readonly RobotsFileTokenType TokenType;

@@ -3,6 +3,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Numerics;
+#endif
+
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
 [DebuggerDisplay("Index = {Index}; Current = {Current}")]
@@ -204,21 +210,80 @@ public struct RobotsFileTokenReader
 	/// </code>
 	/// </remarks>
 	/// <returns></returns>
-	private RobotsFileToken ReadValue(RobotsFileTokenValueFormat valueFormat)
+	private unsafe RobotsFileToken ReadValue(RobotsFileTokenValueFormat valueFormat)
+	{
+		var startIndex = Index;
+#if NET6_0_OR_GREATER
+		if (Avx2.IsSupported)
+		{
+			fixed (byte* valuePtr = &Value.Span.GetPinnableReference())
+			{
+				var lowerBoundsExclusive = Vector256.Create((byte)0x20).AsSByte();
+				var commentHash = Vector256.Create((sbyte)'#');
+				var delimiter = Vector256.Create((sbyte)':');
+
+				var searchLength = Value.Length - Index;
+				while (searchLength >= Vector256<byte>.Count)
+				{
+					var valueVector = Avx.LoadDquVector256(valuePtr + Index).AsSByte();
+					var lowerBoundsCheck = Avx2.CompareGreaterThan(valueVector, lowerBoundsExclusive);
+					var commentHashCheck = Avx2.AndNot(
+						Avx2.CompareEqual(valueVector, commentHash),
+						Vector256<sbyte>.AllBitsSet
+					);
+
+					var allowedCharacters = Avx2.And(lowerBoundsCheck, commentHashCheck);
+
+					if (valueFormat is RobotsFileTokenValueFormat.RuleName)
+					{
+						allowedCharacters = Avx2.And(
+							allowedCharacters,
+							Avx2.AndNot(
+								Avx2.CompareEqual(valueVector, delimiter),
+								Vector256<sbyte>.AllBitsSet
+							)
+						);
+					}
+
+					var match = (uint)Avx2.MoveMask(
+						allowedCharacters.AsByte()
+					);
+
+					if (match == uint.MaxValue)
+					{
+						Index += Vector256<byte>.Count;
+						searchLength -= Vector256<byte>.Count;
+						continue;
+					}
+
+					Index += BitOperations.TrailingZeroCount(match ^ uint.MaxValue) / sizeof(byte);
+					return CreateToken(RobotsFileTokenType.Value, startIndex);
+				}
+			}
+		}
+#endif
+		return ReadValueSlow(startIndex, valueFormat);
+	}
+
+	private RobotsFileToken ReadValueSlow(int startIndex, RobotsFileTokenValueFormat valueFormat)
 	{
 		const byte UTF8_1_NoCtl_Low = 0x21;
 
-		var startIndex = Index;
 		while (true)
 		{
 			//This kinda needs to stop at `:` but not all the time
 			switch (Current)
 			{
 				case EndOfFile:
-				case < UTF8_1_NoCtl_Low:
+				case (byte)' ':
+				case (byte)'\t':
+				case (byte)'\r':
+				case (byte)'\n':
 				case (byte)'#':
 				case (byte)':' when valueFormat is RobotsFileTokenValueFormat.RuleName:
 					return CreateToken(RobotsFileTokenType.Value, startIndex);
+				case < UTF8_1_NoCtl_Low:
+					return ReadInvalidValue(startIndex);
 				default:
 					if (RobotsExclusionProtocolHelper.TryReadUtf8ByteSequence(Value.Span.Slice(Index), out var numberOfBytes))
 					{
