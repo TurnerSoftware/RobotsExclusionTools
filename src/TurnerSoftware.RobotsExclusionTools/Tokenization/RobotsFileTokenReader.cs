@@ -239,24 +239,27 @@ public struct RobotsFileTokenReader
 
 	/// <summary>
 	/// Like <see cref="ReadValue"/> but is always an invalid token type.
+	/// The token ends when either a comment, new line or end of data is found.
 	/// </summary>
 	/// <param name="startIndex"></param>
 	/// <returns></returns>
 	private RobotsFileToken ReadInvalidValue(int startIndex)
 	{
-		while (true)
-		{
-			switch (Current)
-			{
-				case EndOfFile:
-				case (byte)'#':
-				case (byte)'\r':
-				case (byte)'\n':
-					return CreateToken(RobotsFileTokenType.Invalid, startIndex);
-			}
+		var invalidTokenEndIndex = Value.Span
+			.Slice(Index)
+			.IndexOfAny((byte)'#', (byte)'\r', (byte)'\n');
 
-			ReadNext();
+		if (invalidTokenEndIndex == -1)
+		{
+			//If none of the expected characters are found, we skip to the end
+			Index = Value.Length;
 		}
+		else
+		{
+			Index += invalidTokenEndIndex;
+		}
+
+		return CreateToken(RobotsFileTokenType.Invalid, startIndex);
 	}
 }
 
