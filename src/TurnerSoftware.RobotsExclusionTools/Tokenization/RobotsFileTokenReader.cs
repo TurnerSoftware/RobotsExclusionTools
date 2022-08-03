@@ -257,7 +257,8 @@ public struct RobotsFileTokenReader
 					}
 
 					Index += BitOperations.TrailingZeroCount(match ^ uint.MaxValue) / sizeof(byte);
-					return CreateToken(RobotsFileTokenType.Value, startIndex);
+					//Fallback to slow processing for any remainder
+					break;
 				}
 			}
 		}
@@ -287,11 +288,7 @@ public struct RobotsFileTokenReader
 				default:
 					if (RobotsExclusionProtocolHelper.TryReadUtf8ByteSequence(Value.Span.Slice(Index), out var numberOfBytes))
 					{
-						ReadNext();
-						if (numberOfBytes > 2)
-						{
-							ReadNext();
-						}
+						Index += numberOfBytes;
 						continue;
 					}
 					else
