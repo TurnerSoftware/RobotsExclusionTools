@@ -6,9 +6,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers;
 public static class RobotsExclusionProtocolHelper
 {
 	/// <summary>
-	/// Attempts to count the bytes of the first UTF-8 character from the 16-bit character span.
-	/// This involves reading either just the current character or the current and next character
-	/// to get enough bytes to represent the full range of UTF-8 bytes.
+	/// Attempts to count the bytes of the first UTF-8 character from the byte span.
 	/// </summary>
 	/// <remarks>
 	/// <b>UTF-8 (RFC 3629)</b>
@@ -25,20 +23,31 @@ public static class RobotsExclusionProtocolHelper
 	/// </code>
 	/// </remarks>
 	/// <returns></returns>
-	public static unsafe bool TryReadUtf8ByteSequence(ReadOnlySpan<char> value, out int numberOfBytes)
+	public static unsafe bool TryReadUtf8ByteSequence(ReadOnlySpan<byte> value, out int numberOfBytes)
 	{
-		Span<byte> bytes = stackalloc byte[4];
-
-		//We need to read a char (a 2-byte value) as a 4-byte value by reading the
-		//next character too while still making sure we don't read past the end.
-		var readCount = Math.Min(2, value.Length);
-		fixed (byte* bytesPointer = &bytes.GetPinnableReference())
-		fixed (char* valuePointer = &value.GetPinnableReference())
+		byte byte1, byte2 = 0, byte3 = 0, byte4 = 0;
+		if (value.Length > 0)
 		{
-			Encoding.UTF8.GetBytes(valuePointer, readCount, bytesPointer, 4);
+			byte1 = value[0];
+			if (value.Length > 1)
+			{
+				byte2 = value[1];
+				if (value.Length > 2)
+				{
+					byte3 = value[2];
+					if (value.Length > 3)
+					{
+						byte4 = value[3];
+					}
+				}
+			}
+		}
+		else
+		{
+			numberOfBytes = 0;
+			return false;
 		}
 
-		byte byte1 = bytes[0], byte2 = bytes[1], byte3 = bytes[2], byte4 = bytes[3];
 		numberOfBytes = byte1 switch
 		{
 			<= 0x7F => 1,
@@ -72,7 +81,7 @@ public static class RobotsExclusionProtocolHelper
 	/// </remarks>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	public static bool IsValidProductToken(ReadOnlySpan<char> value)
+	public static bool IsValidProductToken(ReadOnlySpan<byte> value)
 	{
 		if (value.Length == 1 && value[0] == '*')
 		{
@@ -92,7 +101,7 @@ public static class RobotsExclusionProtocolHelper
 	/// </remarks>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	public static bool IsValidIdentifier(ReadOnlySpan<char> value)
+	public static bool IsValidIdentifier(ReadOnlySpan<byte> value)
 	{
 		for (var i = 0; i < value.Length; i++)
 		{
@@ -130,7 +139,7 @@ public static class RobotsExclusionProtocolHelper
 	/// </code>
 	/// </remarks>
 	/// <returns></returns>
-	public static bool IsValidPath(ReadOnlySpan<char> value)
+	public static bool IsValidPath(ReadOnlySpan<byte> value)
 	{
 		if (value.Length > 0 && value[0] == '/')
 		{

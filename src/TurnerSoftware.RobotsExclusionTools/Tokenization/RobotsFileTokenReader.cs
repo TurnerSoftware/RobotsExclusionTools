@@ -8,18 +8,18 @@ namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 [DebuggerDisplay("Index = {Index}; Current = {Current}")]
 public struct RobotsFileTokenReader
 {
-	private const char EndOfFile = char.MinValue;
+	private const byte EndOfFile = 0x00;
 
-	private readonly ReadOnlyMemory<char> Value;
+	private readonly ReadOnlyMemory<byte> Value;
 	private int Index;
 
-	public RobotsFileTokenReader(ReadOnlyMemory<char> value)
+	public RobotsFileTokenReader(ReadOnlyMemory<byte> value)
 	{
 		Value = value;
 		Index = 0;
 	}
 
-	private char Current
+	private byte Current
 	{
 		get
 		{
@@ -32,7 +32,7 @@ public struct RobotsFileTokenReader
 		}
 	}
 
-	private char Peek()
+	private byte Peek()
 	{
 		if (Index + 1 < Value.Length)
 		{
@@ -54,10 +54,10 @@ public struct RobotsFileTokenReader
 
 		token = Current switch
 		{
-			' ' or '\t' => ReadWhitespace(),
-			'#' => ReadComment(),
-			'\r' or '\n' => ReadNewLine(),
-			':' => ReadDelimiter(),
+			(byte)' ' or (byte)'\t' => ReadWhitespace(),
+			(byte)'#' => ReadComment(),
+			(byte)'\r' or (byte)'\n' => ReadNewLine(),
+			(byte)':' => ReadDelimiter(),
 			_ => ReadValue(valueFormat)
 		};
 		return true;
@@ -69,7 +69,7 @@ public struct RobotsFileTokenReader
 		{
 			var newLineIndex = Value.Span
 				.Slice(Index)
-				.IndexOfAny('\r', '\n');
+				.IndexOfAny((byte)'\r', (byte)'\n');
 
 			if (newLineIndex == -1)
 			{
@@ -112,8 +112,8 @@ public struct RobotsFileTokenReader
 		{
 			switch (Current)
 			{
-				case ' ':
-				case '\t':
+				case (byte)' ':
+				case (byte)'\t':
 					ReadNext();
 					continue;
 				default:
@@ -146,7 +146,7 @@ public struct RobotsFileTokenReader
 		var startIndex = Index;
 		var newLineIndex = Value.Span
 			.Slice(Index)
-			.IndexOfAny('\r', '\n');
+			.IndexOfAny((byte)'\r', (byte)'\n');
 
 		if (newLineIndex == -1)
 		{
@@ -206,7 +206,7 @@ public struct RobotsFileTokenReader
 	/// <returns></returns>
 	private RobotsFileToken ReadValue(RobotsFileTokenValueFormat valueFormat)
 	{
-		const char UTF8_1_NoCtl_Low = (char)0x21;
+		const byte UTF8_1_NoCtl_Low = 0x21;
 
 		var startIndex = Index;
 		while (true)
@@ -216,8 +216,8 @@ public struct RobotsFileTokenReader
 			{
 				case EndOfFile:
 				case < UTF8_1_NoCtl_Low:
-				case '#':
-				case ':' when valueFormat is RobotsFileTokenValueFormat.RuleName:
+				case (byte)'#':
+				case (byte)':' when valueFormat is RobotsFileTokenValueFormat.RuleName:
 					return CreateToken(RobotsFileTokenType.Value, startIndex);
 				default:
 					if (RobotsExclusionProtocolHelper.TryReadUtf8ByteSequence(Value.Span.Slice(Index), out var numberOfBytes))
@@ -249,9 +249,9 @@ public struct RobotsFileTokenReader
 			switch (Current)
 			{
 				case EndOfFile:
-				case '#':
-				case '\r':
-				case '\n':
+				case (byte)'#':
+				case (byte)'\r':
+				case (byte)'\n':
 					return CreateToken(RobotsFileTokenType.Invalid, startIndex);
 			}
 

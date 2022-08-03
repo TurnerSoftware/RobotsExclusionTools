@@ -29,7 +29,7 @@ public class RobotsFileParser : IRobotsFileParser
 	{
 		var parseState = new SiteAccessParseState();
 
-		await foreach (var charLine in StreamLineReader.EnumerateLinesOfCharsAsync(stream, cancellationToken))
+		await foreach (var charLine in StreamLineReader.EnumerateLinesAsMemoryAsync(stream, cancellationToken))
 		{
 			var reader = new RobotsFileTokenReader(charLine);
 			if (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
@@ -44,19 +44,41 @@ public class RobotsFileParser : IRobotsFileParser
 	}
 
 	/// <inheritdoc/>
-	public RobotsFile FromString(string robotsText, Uri baseUri)
+	public unsafe RobotsFile FromString(string robotsText, Uri baseUri)
 	{
-		var reader = new RobotsFileTokenReader(robotsText.AsMemory());
-		var parseState = new SiteAccessParseState();
+		var numberOfBytes = Encoding.UTF8.GetByteCount(robotsText);
+		var utf8RobotsTextArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
 
-		while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
+		try
 		{
-			ProcessLine(token, ref reader, ref parseState);
-		}
+#if NETSTANDARD2_0
+			fixed (byte* bytesPointer = &utf8RobotsTextArray[0])
+			fixed (char* charPointer = &robotsText.AsSpan().GetPinnableReference())
+			{
+				Encoding.UTF8.GetBytes(charPointer, robotsText.Length, bytesPointer, numberOfBytes);
+			}
+#else
+			Encoding.UTF8.GetBytes(robotsText, utf8RobotsTextArray);
+#endif
 
-		//Add final entry that was being constructed in our state tracker
-		parseState.CaptureEntry();
-		return new RobotsFile(baseUri, parseState.SiteAccessEntries, parseState.SitemapUrlEntries);
+			var utf8RobotsText = utf8RobotsTextArray.AsMemory().Slice(0, numberOfBytes);
+			var reader = new RobotsFileTokenReader(utf8RobotsText);
+
+			var parseState = new SiteAccessParseState();
+
+			while (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
+			{
+				ProcessLine(token, ref reader, ref parseState);
+			}
+
+			//Add final entry that was being constructed in our state tracker
+			parseState.CaptureEntry();
+			return new RobotsFile(baseUri, parseState.SiteAccessEntries, parseState.SitemapUrlEntries);
+		}
+		finally
+		{
+			ArrayPool<byte>.Shared.Return(utf8RobotsTextArray);
+		}
 	}
 
 	/// <inheritdoc/>
@@ -149,7 +171,51 @@ public class RobotsFileParser : IRobotsFileParser
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool AreEqual(ReadOnlySpan<char> input, string comparison) => input.Equals(comparison.AsSpan(), StringComparison.OrdinalIgnoreCase);
+	private static bool AreEqual(ReadOnlySpan<byte> input, ReadOnlySpan<byte> comparison)
+	{
+		//Check if they are exactly equal
+		if (input.SequenceEqual(comparison))
+		{
+			return true;
+		}
+
+		//If they aren't exactly equal, make sure they are the same length
+		if (input.Length != comparison.Length)
+		{
+			return false;
+		}
+
+		//If they are, compare each character
+		for (var i = 0; i < input.Length; i++)
+		{
+			var inputChar = input[i];
+			var comparisonChar = comparison[i];
+
+			if (inputChar == comparisonChar)
+			{
+				continue;
+			}
+
+			//If the characters aren't equal and they're ASCII, make them lowercase if they aren't already
+			if (inputChar is >= (byte)'A' and <= (byte)'Z')
+			{
+				inputChar |= 0x20;
+			}
+
+			if (comparisonChar is >= (byte)'A' and <= (byte)'Z')
+			{
+				comparisonChar |= 0x20;
+			}
+
+			//If they aren't equal now, fail
+			if (inputChar != comparisonChar)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	private static bool TrySkipFieldToValue(ref RobotsFileTokenReader reader, out RobotsFileToken token)
 	{
@@ -192,7 +258,7 @@ public class RobotsFileParser : IRobotsFileParser
 		else if (token.TokenType is RobotsFileTokenType.Value)
 		{
 			var tokenValue = token.Value.Span;
-			if (AreEqual(tokenValue, Constants.UserAgentField))
+			if (AreEqual(tokenValue, Constants.UTF8.UserAgentField))
 			{
 				if (parseState.HasSeenRule)
 				{
@@ -208,10 +274,10 @@ public class RobotsFileParser : IRobotsFileParser
 			}
 			else
 			{
-				if (AreEqual(tokenValue, Constants.DisallowField) || AreEqual(tokenValue, Constants.AllowField))
+				if (AreEqual(tokenValue, Constants.UTF8.DisallowField) || AreEqual(tokenValue, Constants.UTF8.AllowField))
 				{
 					var ruleType = PathRuleType.Disallow;
-					if (tokenValue[0] is 'A' or 'a')
+					if (tokenValue[0] is (byte)'A' or (byte)'a')
 					{
 						ruleType = PathRuleType.Allow;
 					}
@@ -268,7 +334,7 @@ public class RobotsFileParser : IRobotsFileParser
 					parseState.PathRules.Add(new SiteAccessPathRule(string.Empty, ruleType));
 					reader.SkipLine();
 				}
-				else if (AreEqual(tokenValue, Constants.CrawlDelayField))
+				else if (AreEqual(tokenValue, Constants.UTF8.CrawlDelayField))
 				{
 					if (TrySkipFieldToValue(ref reader, out token))
 					{
@@ -281,11 +347,11 @@ public class RobotsFileParser : IRobotsFileParser
 					}
 					reader.SkipLine();
 				}
-				else if (AreEqual(tokenValue, Constants.SitemapField))
+				else if (AreEqual(tokenValue, Constants.UTF8.SitemapField))
 				{
 					if (TrySkipFieldToValue(ref reader, out token))
 					{
-						var tokenString = token.Value.Span.ToString();
+						var tokenString = token.ToString();
 						if (Uri.TryCreate(tokenString, UriKind.Absolute, out var parsedUri))
 						{
 							parseState.HasSeenRule = true;

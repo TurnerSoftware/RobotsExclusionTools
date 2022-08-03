@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 
 namespace TurnerSoftware.RobotsExclusionTools.Helpers;
@@ -14,7 +13,7 @@ public static class StreamLineReader
 	private const byte NewLineChar = (byte)'\n';
 	private static readonly StreamPipeReaderOptions Options = new(leaveOpen: true);
 
-	public static async IAsyncEnumerable<ReadOnlySequence<byte>> EnumerateLinesOfBytesAsync(
+	public static async IAsyncEnumerable<ReadOnlySequence<byte>> EnumerateLinesAsSequenceAsync(
 		Stream stream,
 		[EnumeratorCancellation] CancellationToken cancellationToken = default
 	)
@@ -52,54 +51,21 @@ public static class StreamLineReader
 
 		reader.Complete();
 	}
-
-	public static async IAsyncEnumerable<ReadOnlyMemory<char>> EnumerateLinesOfCharsAsync(
+	public static async IAsyncEnumerable<ReadOnlyMemory<byte>> EnumerateLinesAsMemoryAsync(
 		Stream stream,
 		[EnumeratorCancellation] CancellationToken cancellationToken = default
 	)
 	{
-		await foreach (var lineSequence in EnumerateLinesOfBytesAsync(stream, cancellationToken))
+		await foreach (var lineSequence in EnumerateLinesAsSequenceAsync(stream, cancellationToken))
 		{
 			var numberOfBytes = (int)lineSequence.Length;
-			var charArray = ArrayPool<char>.Shared.Rent(numberOfBytes);
+			var byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
 			try
 			{
-				var numberOfChars = GetUtf8Chars(lineSequence, charArray);
-				yield return charArray.AsMemory(0, numberOfChars);
+				lineSequence.CopyTo(byteArray);
+				yield return byteArray.AsMemory(0, numberOfBytes);
 			}
 			finally
-			{
-				ArrayPool<char>.Shared.Return(charArray);
-			}
-		}
-	}
-
-	private static int GetUtf8Chars(ReadOnlySequence<byte> source, char[] destination)
-	{
-		var numberOfBytes = (int)source.Length;
-		byte[] byteArray = null;
-		try
-		{
-#if NETSTANDARD2_0
-			byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
-			source.CopyTo(byteArray);
-			return Encoding.UTF8.GetChars(byteArray, 0, numberOfBytes, destination, 0);
-#else
-			if (source.IsSingleSegment)
-			{
-				return Encoding.UTF8.GetChars(source.FirstSpan, destination);
-			}
-			else
-			{
-				byteArray = ArrayPool<byte>.Shared.Rent(numberOfBytes);
-				source.CopyTo(byteArray);
-				return Encoding.UTF8.GetChars(byteArray, destination);
-			}
-#endif
-		}
-		finally
-		{
-			if (byteArray is not null)
 			{
 				ArrayPool<byte>.Shared.Return(byteArray);
 			}
