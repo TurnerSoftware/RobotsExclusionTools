@@ -223,7 +223,7 @@ public struct RobotsFileTokenReader
 				var delimiter = Vector256.Create((sbyte)':');
 
 				var searchLength = Value.Length - Index;
-				while (searchLength >= Vector256<byte>.Count)
+				while (searchLength > 0)
 				{
 					var valueVector = Avx.LoadDquVector256(valuePtr + Index).AsSByte();
 					var lowerBoundsCheck = Avx2.CompareGreaterThan(valueVector, lowerBoundsExclusive);
@@ -248,6 +248,13 @@ public struct RobotsFileTokenReader
 					var match = (uint)Avx2.MoveMask(
 						allowedCharacters.AsByte()
 					);
+
+					if (searchLength < Vector256<byte>.Count)
+					{
+						//This zeros-out the bits outside of the search area as a protection to over-reading
+						var matchCutoff = ~(uint.MaxValue << searchLength);
+						match &= matchCutoff;
+					}
 
 					if (match == uint.MaxValue)
 					{
