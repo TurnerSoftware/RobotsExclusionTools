@@ -17,12 +17,14 @@ public struct RobotsFileTokenReader
 	private const byte EndOfFile = 0x00;
 
 	private readonly ReadOnlyMemory<byte> Value;
+	private readonly bool IsSingleLine;
 	private int Index;
 
-	public RobotsFileTokenReader(ReadOnlyMemory<byte> value)
+	public RobotsFileTokenReader(ReadOnlyMemory<byte> value, bool isSingleLine = false)
 	{
 		Value = value;
 		Index = 0;
+		IsSingleLine = isSingleLine;
 	}
 
 	private byte Current
@@ -71,7 +73,11 @@ public struct RobotsFileTokenReader
 
 	public void SkipLine()
 	{
-		if (Index < Value.Length)
+		if (IsSingleLine)
+		{
+			Index = Value.Length;
+		}
+		else if (Index < Value.Length)
 		{
 			var newLineIndex = Value.Span
 				.Slice(Index)
@@ -89,6 +95,7 @@ public struct RobotsFileTokenReader
 				{
 					ReadNext();
 				}
+				ReadNext();
 			}
 		}
 	}

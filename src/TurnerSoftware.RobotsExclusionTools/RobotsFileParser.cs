@@ -31,7 +31,7 @@ public class RobotsFileParser : IRobotsFileParser
 
 		await foreach (var charLine in StreamLineReader.EnumerateLinesAsMemoryAsync(stream, cancellationToken))
 		{
-			var reader = new RobotsFileTokenReader(charLine);
+			var reader = new RobotsFileTokenReader(charLine, isSingleLine: true);
 			if (reader.NextToken(out var token, RobotsFileTokenValueFormat.RuleName))
 			{
 				ProcessLine(token, ref reader, ref parseState);
