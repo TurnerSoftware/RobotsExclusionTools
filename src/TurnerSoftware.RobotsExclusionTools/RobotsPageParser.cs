@@ -40,7 +40,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 		while (reader.NextToken(out var token) && token.TokenType != RobotsPageTokenType.DirectiveDelimiter);
 	}
 
-	private void Parse(IEnumerable<string> rules, out IReadOnlyCollection<PageAccessEntry> pageAccessEntries)
+	private static void Parse(IEnumerable<string> rules, out IReadOnlyCollection<PageAccessEntry> pageAccessEntries)
 	{
 		var tmpEntries = new List<PageAccessEntry>();
 		foreach (var rule in rules)
@@ -78,7 +78,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 			.ToArray();
 	}
 
-	private bool TryParse(ReadOnlyMemory<char> value, out PageAccessEntry pageAccessEntry)
+	private static bool TryParse(ReadOnlyMemory<char> value, out PageAccessEntry pageAccessEntry)
 	{
 		var parseState = ParseState.UserAgentOrValue;
 		var reader = new RobotsPageTokenReader(value);
@@ -91,7 +91,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 			switch (token.TokenType)
 			{
 				case RobotsPageTokenType.Value:
-					var tokenValue = token.Value.Span.ToString();
+					var tokenValue = token.ToString();
 
 					var directiveType = RobotsPageDirectives.GetDirectiveType(tokenValue);
 					switch (directiveType)
@@ -125,7 +125,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 
 							if (token.TokenType == RobotsPageTokenType.Value)
 							{
-								var valueTokenString = token.Value.Span.ToString();
+								var valueTokenString = token.ToString();
 								for (var i = 0; i < directives.Count; i++)
 								{
 									var directive = directives[i];

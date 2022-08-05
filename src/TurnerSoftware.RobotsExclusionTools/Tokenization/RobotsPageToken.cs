@@ -1,8 +1,25 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
-public readonly record struct RobotsPageToken(RobotsPageTokenType TokenType, ReadOnlyMemory<char> Value);
+[DebuggerDisplay("Type = {TokenType}; Value = {ToString()}")]
+public readonly record struct RobotsPageToken
+{
+	public readonly RobotsPageTokenType TokenType;
+	public readonly ReadOnlyMemory<char> Value;
+
+	public RobotsPageToken(RobotsPageTokenType tokenType, ReadOnlyMemory<char> value)
+	{
+		TokenType = tokenType;
+		Value = value;
+	}
+
+	public override string ToString()
+	{
+		return Value.Span.ToString();
+	}
+}
 
 public enum RobotsPageTokenType
 {

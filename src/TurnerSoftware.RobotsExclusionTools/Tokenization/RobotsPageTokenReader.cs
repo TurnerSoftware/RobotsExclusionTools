@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tokenization;
 
+[DebuggerDisplay("Index = {Index}; Current = {Current}")]
 public struct RobotsPageTokenReader
 {
 	private const char EndOfLine = char.MinValue;
