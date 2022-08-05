@@ -6,7 +6,7 @@ using BenchmarkDotNet.Attributes;
 namespace TurnerSoftware.RobotsExclusionTools.Benchmarks;
 
 [Config(typeof(DefaultBenchmarkConfig))]
-public class StreamVsString
+public class RobotsFileParsingBenchmark
 {
 	private RobotsFileParser Parser { get; } = new RobotsFileParser();
 	private Uri Uri { get; } = new Uri("https://google.com");
