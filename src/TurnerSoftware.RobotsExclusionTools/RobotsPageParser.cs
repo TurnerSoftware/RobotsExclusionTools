@@ -110,22 +110,31 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 							continue;
 						case RobotsPageDirectives.DirectiveType.FieldWithValue:
 							//Expect the next token to be a field value delimiter
-							if (!reader.NextToken(out token) || token.TokenType != RobotsPageTokenType.FieldValueDelimiter)
+							if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsPageTokenType.FieldValueDelimiter)
+							{
+								ReadTillNextDirective(ref reader);
+								continue;
+							}
+
+							if (!reader.NextToken(out var expectedWhitespaceOrValue, RobotsPageTokenValueFormat.Flexible))
 							{
 								ReadTillNextDirective(ref reader);
 								continue;
 							}
 
 							//Skip any whitespace that might exist
-							if (token.TokenType == RobotsPageTokenType.Whitespace && !reader.NextToken(out token))
+							if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Whitespace)
 							{
-								//Reached the end of the line
-								continue;
+								if (!reader.NextToken(out var expectedValue, RobotsPageTokenValueFormat.Flexible))
+								{
+									continue;
+								}
+								expectedWhitespaceOrValue = expectedValue;
 							}
 
-							if (token.TokenType == RobotsPageTokenType.Value)
+							if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Value)
 							{
-								var valueTokenString = token.ToString();
+								var valueTokenString = expectedWhitespaceOrValue.ToString();
 								for (var i = 0; i < directives.Count; i++)
 								{
 									var directive = directives[i];

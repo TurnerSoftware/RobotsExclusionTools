@@ -38,12 +38,38 @@ public record class RobotsPageDefinition
 		return true;
 	}
 
+	public bool HasRule(string ruleName, string userAgent) => HasRule(ruleName.AsSpan(), userAgent.AsSpan());
 	public bool HasRule(ReadOnlySpan<char> ruleName, ReadOnlySpan<char> userAgent)
 	{
 		if (TryGetEntryForUserAgent(userAgent, out var entry))
 		{
 			return entry.HasRule(ruleName);
 		}
+		return false;
+	}
+
+	public bool HasRule(string ruleName) => HasRule(ruleName.AsSpan());
+	public bool HasRule(ReadOnlySpan<char> ruleName)
+	{
+		if (TryGetGlobalEntry(out var globalEntry))
+		{
+			return globalEntry.HasRule(ruleName);
+		}
+		return false;
+	}
+
+	public bool TryGetGlobalEntry(out PageAccessEntry pageAccessEntry)
+	{
+		foreach (var entry in PageAccessEntries)
+		{
+			if (entry.UserAgent == Constants.UserAgentWildcard)
+			{
+				pageAccessEntry = entry;
+				return true;
+			}
+		}
+
+		pageAccessEntry = default;
 		return false;
 	}
 

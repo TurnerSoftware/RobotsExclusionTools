@@ -34,7 +34,7 @@ public struct RobotsPageTokenReader
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private void ReadNext() => Index++;
 
-	public bool NextToken(out RobotsPageToken token)
+	public bool NextToken(out RobotsPageToken token, RobotsPageTokenValueFormat valueFormat = RobotsPageTokenValueFormat.Strict)
 	{
 		if (Current == EndOfLine)
 		{
@@ -47,7 +47,7 @@ public struct RobotsPageTokenReader
 			' ' or '\t' or '\r' or '\n' => ReadWhitespace(),
 			':' => ReadChar(RobotsPageTokenType.FieldValueDelimiter),
 			',' => ReadChar(RobotsPageTokenType.DirectiveDelimiter),
-			_ => ReadValue()
+			_ => ReadValue(valueFormat)
 		};
 		return true;
 	}
@@ -85,23 +85,46 @@ public struct RobotsPageTokenReader
 		}
 	}
 
-	private RobotsPageToken ReadValue()
+	private RobotsPageToken ReadValue(RobotsPageTokenValueFormat valueFormat)
 	{
 		var startIndex = Index;
-		while (true)
+
+		if (valueFormat is RobotsPageTokenValueFormat.Strict)
 		{
-			ReadNext();
-			switch (Current)
+			while (true)
 			{
-				case EndOfLine:
-				case ':':
-				case ',':
-				case ' ':
-				case '\t':
-				case '\r':
-				case '\n':
-					return CreateToken(RobotsPageTokenType.Value, startIndex);
+				ReadNext();
+				switch (Current)
+				{
+					case EndOfLine:
+					case ':':
+					case ',':
+					case ' ':
+					case '\t':
+					case '\r':
+					case '\n':
+						return CreateToken(RobotsPageTokenType.Value, startIndex);
+				}
 			}
 		}
+		else
+		{
+			Index = Value.Length;
+			return CreateToken(RobotsPageTokenType.Value, startIndex);
+		}
 	}
+}
+
+public enum RobotsPageTokenValueFormat
+{
+	/// <summary>
+	/// For processing tokens without accepting a colon (:), comma (,), 
+	/// space ( ), horizontal tab (\t), carriage return (\r) or new line (\n).
+	/// </summary>
+	Strict,
+	/// <summary>
+	/// For processing tokens with any character including spaces. When used,
+	/// there will not be any additional tokens left if a value is found.
+	/// </summary>
+	Flexible
 }
