@@ -21,7 +21,7 @@ namespace TurnerSoftware.RobotsExclusionTools;
 /// Instead, if you feed it a list of strings from the appropriate meta tags and headers, it will parse the rules for you.
 /// </remarks>
 public class RobotsPageParser : IRobotsPageDefinitionParser
-{	
+{
 	public RobotsPageDefinition FromRules(IEnumerable<string> rules)
 	{
 		Parse(rules, out var pageAccessEntries);
@@ -42,49 +42,72 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 
 	private static void Parse(IEnumerable<string> rules, out IReadOnlyCollection<PageAccessEntry> pageAccessEntries)
 	{
-		var tmpEntries = new List<PageAccessEntry>();
+		var userAgentDirectives = new Dictionary<string, List<PageAccessDirective>>(StringComparer.OrdinalIgnoreCase);
+
 		foreach (var rule in rules)
 		{
-			if (TryParse(rule.AsMemory(), out var entry))
+			ParseLine(rule.AsMemory(), userAgentDirectives);
+		}
+
+		IList<PageAccessDirective> globalDirectives = Array.Empty<PageAccessDirective>();
+		if (userAgentDirectives.TryGetValue(Constants.UserAgentWildcard, out var foundGlobalDirectives))
+		{
+			globalDirectives = foundGlobalDirectives;
+		}
+
+		static void CombineDirectives(List<PageAccessDirective> directives, IList<PageAccessDirective> globalDirectives)
+		{
+			for (var j = 0; j < globalDirectives.Count; j++)
 			{
-				tmpEntries.Add(entry);
+				var globalDirective = globalDirectives[j];
+
+				for (var i = 0; i < directives.Count; i++)
+				{
+					var directive = directives[i];
+					if (globalDirective.Name.Equals(directive.Name, StringComparison.OrdinalIgnoreCase))
+					{
+						goto NextGlobalDirective;
+					}
+				}
+
+				directives.Add(globalDirective);
+				NextGlobalDirective:
+				;
 			}
 		}
 
-		static IReadOnlyCollection<PageAccessDirective> Distinct(IEnumerable<PageAccessDirective> values)
+		var entries = new List<PageAccessEntry>();
+		foreach (var (userAgent, directives) in userAgentDirectives)
 		{
-			//Squash directives with the same name together, prefering the last value
-			return values
-				.GroupBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
-				.Select(d => d.LastOrDefault())
-				.ToArray();
+			if (globalDirectives is not null)
+			{
+				CombineDirectives(directives, globalDirectives);
+			}
+
+			entries.Add(new PageAccessEntry(userAgent, directives));
 		}
 
-		var globalDirectives = tmpEntries
-			.Where(e => e.UserAgent == Constants.UserAgentWildcard)
-			.SelectMany(e => e.Directives)
-			.ToArray();
-
-		pageAccessEntries = tmpEntries
-			.GroupBy(e => e.UserAgent, StringComparer.OrdinalIgnoreCase)
-			.Select(g => new PageAccessEntry(
-				g.Key,
-				Distinct(g.Key == Constants.UserAgentWildcard ?
-					g.SelectMany(e => e.Directives) :
-					//We want to preference the last value but not ignoring the global directives
-					globalDirectives.Concat(g.SelectMany(e => e.Directives))
-				)
-			))
-			.ToArray();
+		pageAccessEntries = entries;
 	}
 
-	private static bool TryParse(ReadOnlyMemory<char> value, out PageAccessEntry pageAccessEntry)
+	private static void ParseLine(ReadOnlyMemory<char> value, Dictionary<string, List<PageAccessDirective>> userAgentDirectives)
 	{
 		var parseState = ParseState.UserAgentOrValue;
 		var reader = new RobotsPageTokenReader(value);
 
 		var userAgent = Constants.UserAgentWildcard;
-		var directives = new List<PageAccessDirective>();
+		static List<PageAccessDirective> GetDirectives(
+			Dictionary<string, List<PageAccessDirective>> userAgentDirectives, 
+			string userAgent
+		)
+		{
+			if (!userAgentDirectives.TryGetValue(userAgent, out var directives))
+			{
+				directives = new List<PageAccessDirective>();
+				userAgentDirectives[userAgent] = directives;
+			}
+			return directives;
+		}
 
 		while (reader.NextToken(out var token))
 		{
@@ -97,17 +120,20 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 					switch (directiveType)
 					{
 						case RobotsPageDirectives.DirectiveType.ValueOnly:
-							foreach (var directive in directives)
 							{
-								if (directive.Name.Equals(tokenValue, StringComparison.OrdinalIgnoreCase))
+								var directives = GetDirectives(userAgentDirectives, userAgent);
+								foreach (var directive in directives)
 								{
-									//No point adding the same value twice
-									goto ValueOnlyEnd;
+									if (directive.Name.Equals(tokenValue, StringComparison.OrdinalIgnoreCase))
+									{
+										//No point adding the same value twice
+										goto ValueOnlyEnd;
+									}
 								}
+								directives.Add(new PageAccessDirective(tokenValue));
+								ValueOnlyEnd:
+								continue;
 							}
-							directives.Add(new PageAccessDirective(tokenValue));
-							ValueOnlyEnd:
-							continue;
 						case RobotsPageDirectives.DirectiveType.FieldWithValue:
 							//Expect the next token to be a field value delimiter
 							if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsPageTokenType.FieldValueDelimiter)
@@ -135,6 +161,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 							if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Value)
 							{
 								var valueTokenString = expectedWhitespaceOrValue.ToString();
+								var directives = GetDirectives(userAgentDirectives, userAgent);
 								for (var i = 0; i < directives.Count; i++)
 								{
 									var directive = directives[i];
@@ -172,14 +199,5 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 					continue;
 			}
 		}
-
-		if (directives.Count > 0)
-		{
-			pageAccessEntry = new PageAccessEntry(userAgent, directives);
-			return true;
-		}
-
-		pageAccessEntry = default;
-		return false;
 	}
 }
