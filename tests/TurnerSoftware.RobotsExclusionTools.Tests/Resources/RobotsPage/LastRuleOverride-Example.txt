@@ -1,5 +1,0 @@
-﻿nofollow
-allbot: all
-inheritrulebot: noindex
-noarchive
-custombot: notranslate

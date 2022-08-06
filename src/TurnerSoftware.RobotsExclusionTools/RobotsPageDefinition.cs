@@ -48,28 +48,14 @@ public record class RobotsPageDefinition
 		return false;
 	}
 
-	public bool HasRule(string ruleName) => HasRule(ruleName.AsSpan());
-	public bool HasRule(ReadOnlySpan<char> ruleName)
+	public bool TryGetRuleValue(string ruleName, string userAgent, out string value) => TryGetRuleValue(ruleName.AsSpan(), userAgent.AsSpan(), out value);
+	public bool TryGetRuleValue(ReadOnlySpan<char> ruleName, ReadOnlySpan<char> userAgent, out string value)
 	{
-		if (TryGetGlobalEntry(out var globalEntry))
+		if (TryGetEntryForUserAgent(userAgent, out var pageAccessEntry))
 		{
-			return globalEntry.HasRule(ruleName);
+			return pageAccessEntry.TryGetValue(ruleName, out value);
 		}
-		return false;
-	}
-
-	public bool TryGetGlobalEntry(out PageAccessEntry pageAccessEntry)
-	{
-		foreach (var entry in PageAccessEntries)
-		{
-			if (entry.UserAgent == Constants.UserAgentWildcard)
-			{
-				pageAccessEntry = entry;
-				return true;
-			}
-		}
-
-		pageAccessEntry = default;
+		value = null;
 		return false;
 	}
 

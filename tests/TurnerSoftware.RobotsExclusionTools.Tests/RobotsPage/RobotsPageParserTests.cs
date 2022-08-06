@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 {
@@ -38,35 +37,51 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 		}
 
 		[TestMethod]
-		public void RuleWithoutAgent()
+		public void UnlistedAgentRule()
 		{
 			var robotsPageDefinition = GetRobotsPageDefinition("RobotsPage-Example.txt");
 
-			Assert.IsTrue(robotsPageDefinition.HasRule("noarchive"));
-			Assert.IsFalse(robotsPageDefinition.HasRule("notranslate"));
+			Assert.IsTrue(robotsPageDefinition.HasRule("noarchive", "unlistedbot"));
+			Assert.IsFalse(robotsPageDefinition.HasRule("notranslate", "unlistedbot"));
 		}
 
 		[TestMethod]
-		public void RuleWithValueWithoutAgent()
+		public void UnlistedAgentRuleWithValue()
 		{
 			var robotsPageDefinition = GetRobotsPageDefinition("RobotsPage-Example.txt");
 
-			Assert.IsTrue(robotsPageDefinition.TryGetGlobalEntry(out var globalEntry));
-			Assert.IsTrue(globalEntry.TryGetValue("unavailable_after".AsSpan(), out var value));
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("unavailable_after", "unlistedbot", out var value));
 			Assert.AreEqual("25 Jun 2010 15:00:00 PST", value);
 		}
 
 		[TestMethod]
-		public void LastRuleOverride()
+		public void ListedAgentRuleWithValue()
 		{
-			var definition = GetRobotsPageDefinition("LastRuleOverride-Example.txt");
+			var robotsPageDefinition = GetRobotsPageDefinition("RobotsPage-Example.txt");
 
-			Assert.IsTrue(definition.CanIndex("AllBot/2.5"));
-			Assert.IsTrue(definition.CanFollowLinks("AllBot/2.5"));
-			Assert.IsFalse(definition.CanIndex("InheritRuleBot/2.0"));
-			Assert.IsTrue(definition.CanFollowLinks("InheritRuleBot/2.0"));
-			Assert.IsTrue(definition.CanIndex("CustomBot/1.0"));
-			Assert.IsTrue(definition.CanFollowLinks("CustomBot/1.0"));
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("max-snippet", "RuleWithValue/1.0", out var value));
+			Assert.AreEqual("1", value);
+		}
+
+		[TestMethod]
+		public void ListedAgentDirectiveOverride()
+		{
+			var robotsPageDefinition = GetRobotsPageDefinition("DirectiveOverride-Example.txt");
+
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("max-snippet", "CustomBot/3.0", out var valueOne));
+			Assert.AreEqual("4", valueOne);
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("unavailable_after", "CustomBot/3.0", out var valueTwo));
+			Assert.AreEqual("30 Jun 2010 15:00:00 PST", valueTwo);
+		}
+
+		[TestMethod]
+		public void UnlistedAgentDirectiveOverride()
+		{
+			var robotsPageDefinition = GetRobotsPageDefinition("DirectiveOverride-Example.txt");
+
+			Assert.IsFalse(robotsPageDefinition.TryGetRuleValue("max-snippet", "unlistedbot", out _));
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("unavailable_after", "unlistedbot", out var value));
+			Assert.AreEqual("30 Jun 2010 15:00:00 PST", value);
 		}
 	}
 }
