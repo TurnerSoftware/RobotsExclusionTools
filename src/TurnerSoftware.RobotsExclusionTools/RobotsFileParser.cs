@@ -265,7 +265,7 @@ public class RobotsFileParser : IRobotsFileParser
 					parseState.CaptureEntry();
 				}
 
-				if (TrySkipFieldToValue(ref reader, out token) && token.IsValidIdentifier())
+				if (TrySkipFieldToValue(ref reader, out token) && token.IsValidProductToken())
 				{
 					parseState.UserAgents.Add(token.ToString());
 				}
