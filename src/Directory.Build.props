@@ -1,32 +1,31 @@
 <Project>
-  
-  <PropertyGroup>
-    <RootNamespace>TurnerSoftware.RobotsExclusionTools</RootNamespace>
 
-    <Company>Turner Software</Company>
+	<PropertyGroup>
+		<RootNamespace>TurnerSoftware.RobotsExclusionTools</RootNamespace>
 
-    <PackageId>$(AssemblyName)</PackageId>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>icon.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/TurnerSoftware/RobotsExclusionTools</PackageProjectUrl>
-    <PackageBaseTags>utilities;robots</PackageBaseTags>
+		<Company>Turner Software</Company>
 
-    <!-- SourceLink Support -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PackageId>$(AssemblyName)</PackageId>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/TurnerSoftware/RobotsExclusionTools</PackageProjectUrl>
+		<PackageBaseTags>utilities;robots</PackageBaseTags>
 
-    <LangVersion>Preview</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="TurnerSoftware.BuildVersioning" Version="0.4.0" PrivateAssets="All" />
-  </ItemGroup>
+		<!-- SourceLink Support -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<DebugType>embedded</DebugType>
 
-  <ItemGroup>
-    <None Include="..\..\images\$(PackageIcon)" Pack="true" PackagePath="/" />
-  </ItemGroup>
+		<LangVersion>Preview</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="TurnerSoftware.BuildVersioning" Version="0.4.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\images\$(PackageIcon)" Pack="true" PackagePath="/" />
+	</ItemGroup>
 
 </Project>
