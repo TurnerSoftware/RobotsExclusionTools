@@ -61,7 +61,7 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 		}
 
 		var globalDirectives = tmpEntries
-			.Where(e => e.UserAgent == Constants.UserAgentField)
+			.Where(e => e.UserAgent == Constants.UserAgentWildcard)
 			.SelectMany(e => e.Directives)
 			.ToArray();
 
