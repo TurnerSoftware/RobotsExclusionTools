@@ -59,6 +59,7 @@ public record class RobotsPageDefinition
 		return false;
 	}
 
+	public bool TryGetEntryForUserAgent(string userAgent, out PageAccessEntry pageAccessEntry) => TryGetEntryForUserAgent(userAgent.AsSpan(), out pageAccessEntry);
 	public bool TryGetEntryForUserAgent(ReadOnlySpan<char> userAgent, out PageAccessEntry pageAccessEntry)
 	{
 		PageAccessEntry globalEntry = default;

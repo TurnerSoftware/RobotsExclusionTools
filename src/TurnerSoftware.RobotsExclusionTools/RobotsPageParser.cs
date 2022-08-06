@@ -135,57 +135,67 @@ public class RobotsPageParser : IRobotsPageDefinitionParser
 								continue;
 							}
 						case RobotsPageDirectives.DirectiveType.FieldWithValue:
-							//Expect the next token to be a field value delimiter
-							if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsPageTokenType.FieldValueDelimiter)
 							{
-								ReadTillNextDirective(ref reader);
-								continue;
-							}
+								//Expect the next token to be a field value delimiter
+								if (!reader.NextToken(out var expectedDelimiter) || expectedDelimiter.TokenType != RobotsPageTokenType.FieldValueDelimiter)
+								{
+									ReadTillNextDirective(ref reader);
+									continue;
+								}
 
-							if (!reader.NextToken(out var expectedWhitespaceOrValue, RobotsPageTokenValueFormat.Flexible))
-							{
-								ReadTillNextDirective(ref reader);
-								continue;
-							}
-
-							//Skip any whitespace that might exist
-							if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Whitespace)
-							{
-								if (!reader.NextToken(out var expectedValue, RobotsPageTokenValueFormat.Flexible))
+								if (!reader.NextToken(out var expectedWhitespaceOrValue, RobotsPageTokenValueFormat.Flexible))
 								{
 									continue;
 								}
-								expectedWhitespaceOrValue = expectedValue;
-							}
 
-							if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Value)
-							{
-								var valueTokenString = expectedWhitespaceOrValue.ToString();
-								var directives = GetDirectives(userAgentDirectives, userAgent);
-								for (var i = 0; i < directives.Count; i++)
+								//Skip any whitespace that might exist
+								if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Whitespace)
 								{
-									var directive = directives[i];
-									if (directive.Name.Equals(tokenValue, StringComparison.OrdinalIgnoreCase))
+									if (!reader.NextToken(out var expectedValue, RobotsPageTokenValueFormat.Flexible))
 									{
-										//Override any existing value for the directive
-										directives[i] = new PageAccessDirective(tokenValue, valueTokenString);
-										goto FieldWithValueEnd;
+										continue;
 									}
+									expectedWhitespaceOrValue = expectedValue;
 								}
-								directives.Add(new PageAccessDirective(tokenValue, valueTokenString));
-							}
-							FieldWithValueEnd:
-							continue;
-						default:
-							//Assume this is a user agent but only do this once
-							if (parseState != ParseState.UserAgentOrValue)
-							{
+
+								if (expectedWhitespaceOrValue.TokenType == RobotsPageTokenType.Value)
+								{
+									var valueTokenString = expectedWhitespaceOrValue.ToString();
+									var directives = GetDirectives(userAgentDirectives, userAgent);
+									for (var i = 0; i < directives.Count; i++)
+									{
+										var directive = directives[i];
+										if (directive.Name.Equals(tokenValue, StringComparison.OrdinalIgnoreCase))
+										{
+											//Override any existing value for the directive
+											directives[i] = new PageAccessDirective(tokenValue, valueTokenString);
+											goto FieldWithValueEnd;
+										}
+									}
+									directives.Add(new PageAccessDirective(tokenValue, valueTokenString));
+								}
+								FieldWithValueEnd:
 								continue;
 							}
+						default:
+							{
+								if (parseState != ParseState.UserAgentOrValue)
+								{
+									continue;
+								}
 
-							parseState = ParseState.Value;
-							userAgent = tokenValue;
-							continue;
+								//Assume this is a user agent if we find a field value delimiter ...
+								if (
+									reader.NextToken(out var expectedDelimiterOrWhitespace) && 
+									expectedDelimiterOrWhitespace.TokenType == RobotsPageTokenType.FieldValueDelimiter
+								)
+								{
+									//... but only do this once in a rule
+									parseState = ParseState.Value;
+									userAgent = tokenValue;
+								}
+								continue;
+							}
 					}
 				case RobotsPageTokenType.Whitespace:
 				case RobotsPageTokenType.DirectiveDelimiter:

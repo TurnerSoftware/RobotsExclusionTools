@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 {
@@ -14,6 +15,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 			Assert.IsTrue(robotsPageDefinition.CanIndex("NoFollowBot/3000"));
 			Assert.IsFalse(robotsPageDefinition.CanIndex("NoFollowNoIndexBot/2.0"));
 			Assert.IsFalse(robotsPageDefinition.CanIndex("NoneBot/1.0"));
+			Assert.IsFalse(robotsPageDefinition.CanIndex("NoSpaces/1.0"));
 		}
 
 		[TestMethod]
@@ -25,6 +27,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 			Assert.IsFalse(robotsPageDefinition.CanFollowLinks("NoFollowBot/3000"));
 			Assert.IsFalse(robotsPageDefinition.CanFollowLinks("NoFollowNoIndexBot/2.0"));
 			Assert.IsFalse(robotsPageDefinition.CanFollowLinks("NoneBot/1.0"));
+			Assert.IsFalse(robotsPageDefinition.CanFollowLinks("NoSpaces/1.0"));
 		}
 
 		[TestMethod]
@@ -91,6 +94,23 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 			Assert.IsFalse(robotsPageDefinition.TryGetRuleValue("max-snippet", "unlistedbot", out _));
 			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("unavailable_after", "unlistedbot", out var value));
 			Assert.AreEqual("30 Jun 2010 15:00:00 PST", value);
+		}
+
+		[TestMethod]
+		public void DuplicateDirectiveValues()
+		{
+			var robotsPageDefinition = GetRobotsPageDefinition("RobotsPage-Example.txt");
+
+			Assert.IsTrue(robotsPageDefinition.TryGetEntryForUserAgent("DuplicateValues/1.0", out var entry));
+			Assert.AreEqual(1, entry.Directives.Where(d => d.Name == "noindex").Count());
+		}
+
+		[TestMethod]
+		public void InvalidRulesAndDirectives()
+		{
+			var robotsPageDefinition = GetRobotsPageDefinition("InvalidData-Example.txt");
+
+			Assert.AreEqual(0, robotsPageDefinition.PageAccessEntries.Count);
 		}
 	}
 }
