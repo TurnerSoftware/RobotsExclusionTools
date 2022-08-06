@@ -1,84 +1,87 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools;
+
+[DebuggerDisplay("BaseUri = {BaseUri}; SiteAccessEntries = {SiteAccessEntries.Count}; SitemapEntries = {SitemapEntries.Count}")]
+public record class RobotsFile
 {
-	public class RobotsFile
+	public Uri BaseUri { get; }
+	public IReadOnlyCollection<SiteAccessEntry> SiteAccessEntries { get; }
+	public IReadOnlyCollection<SitemapUrlEntry> SitemapEntries { get; }
+
+	private readonly static IReadOnlyCollection<SiteAccessEntry> DenyAllSiteAccessEntries = new[]
 	{
-		public Uri BaseUri { get; }
-
-		public IEnumerable<SiteAccessEntry> SiteAccessEntries { get; set; } = Enumerable.Empty<SiteAccessEntry>();
-		public IEnumerable<SitemapUrlEntry> SitemapEntries { get; set; } = Enumerable.Empty<SitemapUrlEntry>();
-
-		public RobotsFile(Uri baseUri)
+		new SiteAccessEntry
 		{
-			BaseUri = baseUri;
-		}
-
-		internal static RobotsFile ConditionalRobots(Uri baseUri, bool condition)
-		{
-			return condition ? AllowAllRobots(baseUri) : DenyAllRobots(baseUri);
-		}
-
-		public static RobotsFile AllowAllRobots(Uri baseUri)
-		{
-			return new RobotsFile(baseUri);
-		}
-
-		public static RobotsFile DenyAllRobots(Uri baseUri)
-		{
-			return new RobotsFile(baseUri)
+			UserAgents = new[] { "*" },
+			PathRules = new[]
 			{
-				SiteAccessEntries = new []
+				new SiteAccessPathRule
 				{
-					new SiteAccessEntry
-					{
-						UserAgents = new[] { "*" },
-						PathRules = new []
-						{
-							new SiteAccessPathRule
-							{
-								Path = "/",
-								RuleType = PathRuleType.Disallow
-							}
-						}
-					}
-				}
-			};
-		}
-
-		public bool IsAllowedAccess(Uri uri, string userAgent)
-		{
-			if (!uri.IsAbsoluteUri)
-			{
-				uri = new Uri(BaseUri, uri);
-			}
-
-			var entry = GetEntryForUserAgent(userAgent);
-			return PathComparisonUtility.IsAllowed(entry, uri);
-		}
-
-		public SiteAccessEntry GetEntryForUserAgent(string userAgent)
-		{
-			SiteAccessEntry globalEntry = null;
-
-			foreach (var siteAccessEntry in SiteAccessEntries)
-			{
-				if (globalEntry == null && siteAccessEntry.UserAgents.Any(u => u == "*"))
-				{
-					globalEntry = siteAccessEntry;
-				}
-
-				if (siteAccessEntry.UserAgents.Any(u => userAgent.IndexOf(u, StringComparison.InvariantCultureIgnoreCase) != -1))
-				{
-					return siteAccessEntry;
+					Path = "/",
+					RuleType = PathRuleType.Disallow
 				}
 			}
-
-			return globalEntry;
 		}
+	};
+
+	public RobotsFile(
+		Uri baseUri, 
+		IReadOnlyCollection<SiteAccessEntry> siteAccessEntries, 
+		IReadOnlyCollection<SitemapUrlEntry> sitemapEntries
+	)
+	{
+		BaseUri = baseUri;
+		SiteAccessEntries = siteAccessEntries ?? Array.Empty<SiteAccessEntry>();
+		SitemapEntries = sitemapEntries ?? Array.Empty<SitemapUrlEntry>();
+	}
+
+	internal static RobotsFile ConditionalRobots(Uri baseUri, bool condition) => 
+		condition ? AllowAllRobots(baseUri) : DenyAllRobots(baseUri);
+
+	public static RobotsFile AllowAllRobots(Uri baseUri) => new(baseUri, default, default);
+
+	public static RobotsFile DenyAllRobots(Uri baseUri) => new(baseUri, DenyAllSiteAccessEntries, default);
+
+	public bool IsAllowedAccess(Uri uri, string userAgent)
+	{
+		if (!uri.IsAbsoluteUri)
+		{
+			uri = new Uri(BaseUri, uri);
+		}
+
+		if (TryGetEntryForUserAgent(userAgent, out var siteAccessEntry))
+		{
+			return PathComparisonUtility.IsAllowed(siteAccessEntry, uri);
+		}
+
+		//If no entry is defined, the robot is allowed access by default
+		return true;
+	}
+
+	public bool TryGetEntryForUserAgent(string userAgent, out SiteAccessEntry matchingAccessEntry)
+	{
+		SiteAccessEntry? globalEntry = default;
+
+		foreach (var siteAccessEntry in SiteAccessEntries)
+		{
+			if (siteAccessEntry.UserAgents.Contains(Constants.UserAgentWildcard))
+			{
+				globalEntry = siteAccessEntry;
+			}
+
+			if (siteAccessEntry.UserAgents.Any(u => userAgent.IndexOf(u, StringComparison.InvariantCultureIgnoreCase) != -1))
+			{
+				matchingAccessEntry = siteAccessEntry;
+				return true;
+			}
+		}
+
+		matchingAccessEntry = globalEntry ?? default;
+		return globalEntry.HasValue;
 	}
 }

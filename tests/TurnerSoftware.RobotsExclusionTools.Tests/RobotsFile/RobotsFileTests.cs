@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
@@ -15,7 +12,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		{
 			var allowAllRobots = RobotsExclusionTools.RobotsFile.AllowAllRobots(new Uri("http://www.example.org/"));
 			Assert.AreEqual(new Uri("http://www.example.org/"), allowAllRobots.BaseUri);
-			Assert.AreEqual(0, allowAllRobots.SiteAccessEntries.Count());
+			Assert.AreEqual(0, allowAllRobots.SiteAccessEntries.Count);
 
 			Assert.IsTrue(allowAllRobots.IsAllowedAccess(new Uri("http://www.example.org/index.html"), "Unhipbot/1.0"));
 		}
@@ -25,7 +22,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		{
 			var denyAllRobots = RobotsExclusionTools.RobotsFile.DenyAllRobots(new Uri("http://www.example.org/"));
 			Assert.AreEqual(new Uri("http://www.example.org/"), denyAllRobots.BaseUri);
-			Assert.AreEqual(1, denyAllRobots.SiteAccessEntries.Count());
+			Assert.AreEqual(1, denyAllRobots.SiteAccessEntries.Count);
 
 			var entry = denyAllRobots.SiteAccessEntries.First();
 			Assert.IsTrue(entry.UserAgents.Contains("*"));
@@ -40,8 +37,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public void AnyAllowedInBlankFile()
 		{
-			var robotsFile = new RobotsExclusionTools.RobotsFile(new Uri("http://www.example.org/"));
-			Assert.AreEqual(0, robotsFile.SiteAccessEntries.Count());
+			var robotsFile = new RobotsExclusionTools.RobotsFile(new Uri("http://www.example.org/"), default, default);
+			Assert.AreEqual(0, robotsFile.SiteAccessEntries.Count);
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), "GoogleBot"));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/any"), "Webcrawler/1.0"));
 			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/path"), "Unhipbot/1.0"));

@@ -15,7 +15,8 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
 			var userAgent = "AnyUserAgent";
 
-			Assert.AreEqual(60, robotsFile.GetEntryForUserAgent(userAgent).CrawlDelay);
+			Assert.IsTrue(robotsFile.TryGetEntryForUserAgent(userAgent, out var entry));
+			Assert.AreEqual(60, entry.CrawlDelay);
 		}
 
 		[TestMethod]
@@ -23,7 +24,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		{
 			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
 
-			Assert.AreEqual(2, robotsFile.SitemapEntries.Count());
+			Assert.AreEqual(2, robotsFile.SitemapEntries.Count);
 			Assert.AreEqual("http://www.example.org/sitemap.xml", robotsFile.SitemapEntries.First().Sitemap.ToString());
 			Assert.AreEqual("http://www.example.org/sitemap2.xml", robotsFile.SitemapEntries.Last().Sitemap.ToString());
 		}

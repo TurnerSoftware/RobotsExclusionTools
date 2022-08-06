@@ -1,5 +1,0 @@
-﻿nofollow
-googlebot: all
-otherbot: noindex
-noarchive
-somebot: notranslate

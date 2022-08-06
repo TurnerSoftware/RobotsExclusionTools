@@ -1,20 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools;
+
+public readonly record struct PageAccessEntry
 {
-	public class PageAccessEntry
+	public string UserAgent { get; }	
+	public IReadOnlyCollection<PageAccessDirective> Directives { get; }
+
+	public PageAccessEntry(string userAgent, IReadOnlyCollection<PageAccessDirective> directives)
 	{
-		public string UserAgent { get; set; }
-		
-		public IEnumerable<PageAccessRule> Rules { get; set; }
+		UserAgent = userAgent;
+		Directives = directives;
 	}
-	
-	public class PageAccessRule
+
+	public bool HasRule(ReadOnlySpan<char> directiveName) => TryGetValue(directiveName, out _);
+
+	public bool TryGetValue(ReadOnlySpan<char> directiveName, out string value)
 	{
-		public string RuleName { get; set; }
-		
-		public string RuleValue { get; set; }
+		foreach (var directive in Directives)
+		{
+			if (directiveName.Equals(directive.Name.AsSpan(), StringComparison.InvariantCultureIgnoreCase))
+			{
+				value = directive.Value;
+				return true;
+			}
+		}
+		value = null;
+		return false;
 	}
+}
+
+public readonly record struct PageAccessDirective(string Name, string Value)
+{
+	public PageAccessDirective(string name) : this(name, null) { }
 }

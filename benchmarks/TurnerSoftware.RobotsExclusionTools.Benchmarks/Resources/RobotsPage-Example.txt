@@ -6,5 +6,3 @@ noarchive
 unavailable_after: 25 Jun 2010 15:00:00 PST
 rulewithvalue: max-snippet:1
 duplicateruleswithvalue: max-snippet:1, max-snippet:4
-duplicatevalues: noindex,noindex
-nospaces:none

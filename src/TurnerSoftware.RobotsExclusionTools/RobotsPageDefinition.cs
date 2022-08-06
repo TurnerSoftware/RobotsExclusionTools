@@ -1,67 +1,89 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace TurnerSoftware.RobotsExclusionTools
+namespace TurnerSoftware.RobotsExclusionTools;
+
+public record class RobotsPageDefinition
 {
-	public class RobotsPageDefinition
+	public IReadOnlyCollection<PageAccessEntry> PageAccessEntries { get; }
+
+	public RobotsPageDefinition(IReadOnlyCollection<PageAccessEntry> pageAccessEntries)
 	{
-		public IEnumerable<PageAccessEntry> PageAccessEntries { get; set; } = Enumerable.Empty<PageAccessEntry>();
-		
-		public bool CanIndex(string userAgent)
+		PageAccessEntries = pageAccessEntries;
+	}
+
+	public bool CanIndex(string userAgent) => CanIndex(userAgent.AsSpan());
+	public bool CanIndex(ReadOnlySpan<char> userAgent)
+	{
+		if (TryGetEntryForUserAgent(userAgent, out var entry))
 		{
-			return Can("index", userAgent);
-		}
-		
-		public bool CanFollowLinks(string userAgent)
-		{
-			return Can("follow", userAgent);
-		}
-		
-		public bool Can(string ruleName, string userAgent)
-		{
-			var negatedRule = "no" + ruleName;
-			var entry = GetEntryForUserAgent(userAgent);
-			if (entry != null)
+			if (entry.HasRule(RobotsPageDirectives.NoIndex.AsSpan()) || entry.HasRule(RobotsPageDirectives.None.AsSpan()))
 			{
-				var items = entry.Rules.ToArray();
-				
-				//Going through the array backwards gives priority to more specific values (useragent values over global values)
-				for (var i = items.Length - 1; i >= 0; i--)
-				{
-					var rule = items[i];
-					if (rule.RuleName.Equals("all", StringComparison.InvariantCultureIgnoreCase))
-					{
-						return true;
-					}
-					else if (rule.RuleName.Equals(negatedRule, StringComparison.InvariantCultureIgnoreCase))
-					{
-						return false;
-					}
-				}
+				return false;
 			}
+		}
+		return true;
+	}
+
+	public bool CanFollowLinks(string userAgent) => CanFollowLinks(userAgent.AsSpan());
+	public bool CanFollowLinks(ReadOnlySpan<char> userAgent)
+	{
+		if (TryGetEntryForUserAgent(userAgent, out var entry))
+		{
+			if (entry.HasRule(RobotsPageDirectives.NoFollow.AsSpan()) || entry.HasRule(RobotsPageDirectives.None.AsSpan()))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public bool HasRule(string ruleName, string userAgent) => HasRule(ruleName.AsSpan(), userAgent.AsSpan());
+	public bool HasRule(ReadOnlySpan<char> ruleName, ReadOnlySpan<char> userAgent)
+	{
+		if (TryGetEntryForUserAgent(userAgent, out var entry))
+		{
+			return entry.HasRule(ruleName);
+		}
+		return false;
+	}
+
+	public bool TryGetRuleValue(string ruleName, string userAgent, out string value) => TryGetRuleValue(ruleName.AsSpan(), userAgent.AsSpan(), out value);
+	public bool TryGetRuleValue(ReadOnlySpan<char> ruleName, ReadOnlySpan<char> userAgent, out string value)
+	{
+		if (TryGetEntryForUserAgent(userAgent, out var pageAccessEntry))
+		{
+			return pageAccessEntry.TryGetValue(ruleName, out value);
+		}
+		value = null;
+		return false;
+	}
+
+	public bool TryGetEntryForUserAgent(string userAgent, out PageAccessEntry pageAccessEntry) => TryGetEntryForUserAgent(userAgent.AsSpan(), out pageAccessEntry);
+	public bool TryGetEntryForUserAgent(ReadOnlySpan<char> userAgent, out PageAccessEntry pageAccessEntry)
+	{
+		PageAccessEntry globalEntry = default;
+		foreach (var entry in PageAccessEntries)
+		{
+			if (globalEntry.UserAgent is null && entry.UserAgent == Constants.UserAgentWildcard)
+			{
+				globalEntry = entry;
+			}
+
+			if (userAgent.IndexOf(entry.UserAgent.AsSpan(), StringComparison.InvariantCultureIgnoreCase) != -1)
+			{
+				pageAccessEntry = entry;
+				return true;
+			}
+		}
+
+		if (globalEntry.Directives?.Count > 0)
+		{
+			pageAccessEntry = globalEntry;
 			return true;
 		}
-		
-		public PageAccessEntry GetEntryForUserAgent(string userAgent)
-		{
-			PageAccessEntry globalEntry = null;
 
-			foreach (var pageAccessEntry in PageAccessEntries)
-			{
-				if (globalEntry == null && pageAccessEntry.UserAgent == "*")
-				{
-					globalEntry = pageAccessEntry;
-				}
-
-				if (userAgent.IndexOf(pageAccessEntry.UserAgent, StringComparison.InvariantCultureIgnoreCase) != -1)
-				{
-					return pageAccessEntry;
-				}
-			}
-
-			return globalEntry;
-		}
+		pageAccessEntry = default;
+		return false;
 	}
 }

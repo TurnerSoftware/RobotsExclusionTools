@@ -1,10 +1,18 @@
 ﻿using System;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace TurnerSoftware.RobotsExclusionTools.Helpers
 {
 	public static class PathComparisonUtility
 	{
+		private const char PathEndSpecialCharacter = '$';
+		private const char WildcardSpecialCharacter = '*';
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool StartsWith(this ReadOnlySpan<char> source, char value) => source.Length > 0 && source[0] == value;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool EndsWith(this ReadOnlySpan<char> source, char value) => source.Length > 0 && source[source.Length - 1] == value;
+
 		public static bool IsAllowed(SiteAccessEntry accessEntry, Uri requestUri)
 		{
 			var requestPath = requestUri.PathAndQuery;
@@ -16,7 +24,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 			}
 
 			//If no entry is defined, the robot is allowed access by default
-			if (accessEntry == null)
+			if (accessEntry == default)
 			{
 				return true;
 			}
@@ -35,60 +43,97 @@ namespace TurnerSoftware.RobotsExclusionTools.Helpers
 
 			return true;
 		}
-
 		public static bool PathMatch(string sourceRecord, string uriPath, StringComparison comparison)
+			=> PathMatch(sourceRecord.AsSpan(), uriPath.AsSpan(), comparison);
+
+		public static bool PathMatch(ReadOnlySpan<char> sourceRecord, ReadOnlySpan<char> uriPath, StringComparison comparison)
 		{
-			var sourcePieces = sourceRecord.Split(new[] { '*' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
-			var lastPiece = sourcePieces.LastOrDefault();
+			var localSourceRecord = sourceRecord;
 			var mustMatchToEnd = false;
 			var mustMatchToStart = true;
-
-			if (lastPiece != null && lastPiece.EndsWith("$"))
+			
+			if (localSourceRecord.EndsWith(PathEndSpecialCharacter))
 			{
-				//Remove the last dollar sign from the last piece
-				lastPiece = lastPiece.Substring(0, lastPiece.Length - 1);
-				sourcePieces[sourcePieces.Length - 1] = lastPiece;
-				mustMatchToEnd = true;
+				localSourceRecord = localSourceRecord.Slice(0, localSourceRecord.Length - 1);
+				mustMatchToEnd = !localSourceRecord.EndsWith(WildcardSpecialCharacter);
 			}
 
-			if (sourceRecord.StartsWith("*"))
+			if (localSourceRecord.StartsWith(WildcardSpecialCharacter))
 			{
 				mustMatchToStart = false;
 			}
 
 			var offsetPosition = 0;
 
-			for (int i = 0, l = sourcePieces.Length; i < l; i++)
+			var enumerator = new WildcardPathEnumerator(localSourceRecord);
+			var lastPiece = ReadOnlySpan<char>.Empty;
+			while (enumerator.MoveNext(out var sourcePiece))
 			{
-				var piece = sourcePieces[i];
-				var indexPosition = uriPath.IndexOf(piece, offsetPosition, comparison);
+				lastPiece = sourcePiece;
+				var checkPath = uriPath.Slice(offsetPosition);
+				var indexPosition = checkPath.IndexOf(sourcePiece, comparison);
 
 				if (mustMatchToStart && offsetPosition == 0 && indexPosition > 0)
 				{
 					return false;
 				}
-
-				if (indexPosition >= offsetPosition)
-				{
-					offsetPosition = piece.Length;
-				}
-				else
+				else if (indexPosition == -1)
 				{
 					return false;
 				}
 
+				offsetPosition += indexPosition + sourcePiece.Length;
 			}
 
 			if (mustMatchToEnd)
 			{
-				var endOffset = uriPath.Length - lastPiece.Length;
-				if (uriPath.IndexOf(lastPiece, endOffset, comparison) == -1)
-				{
-					return false;
-				}
+				return uriPath.EndsWith(lastPiece, comparison);
 			}
 
 			return true;
+		}
+
+		private ref struct WildcardPathEnumerator
+		{
+			private readonly ReadOnlySpan<char> path;
+			private int index;
+
+			public WildcardPathEnumerator(ReadOnlySpan<char> path)
+			{
+				this.path = path;
+				index = 0;
+			}
+
+			public bool MoveNext(out ReadOnlySpan<char> value)
+			{
+				while (true)
+				{
+					if (index == path.Length)
+					{
+						value = default;
+						return false;
+					}
+
+					var offsetPath = path.Slice(index);
+					var nextOffsetIndex = offsetPath.IndexOf(WildcardSpecialCharacter);
+
+					if (nextOffsetIndex == -1)
+					{
+						value = offsetPath;
+						index += offsetPath.Length;
+						return true;
+					}
+					else if (nextOffsetIndex == 0)
+					{
+						index++;
+						continue;
+					}
+
+					value = offsetPath.Slice(0, nextOffsetIndex);
+					index += nextOffsetIndex + 1;
+					return true;
+				}
+			}
 		}
 	}
 }

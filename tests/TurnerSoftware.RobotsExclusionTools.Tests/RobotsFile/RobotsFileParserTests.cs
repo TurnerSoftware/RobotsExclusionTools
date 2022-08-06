@@ -11,7 +11,7 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 	[TestClass]
 	public class RobotsFileParserTests : TestBase
 	{
-		private TestSiteManager GetRobotsSiteManager(int statusCode)
+		private static TestSiteManager GetRobotsSiteManager(int statusCode)
 		{
 			return new TestSiteManager(new SiteContext { StatusCode = statusCode });
 		}
@@ -142,35 +142,12 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		}
 
 		[TestMethod]
-		public async Task FromUriLoading_Cancellation()
-		{
-			using (var siteManager = GetRobotsSiteManager(200))
-			{
-				var client = siteManager.GetHttpClient();
-				await Assert.ThrowsExceptionAsync<OperationCanceledException>(
-					async () => await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new CancellationToken(true))
-				);
-			}
-		}
-
-		[TestMethod]
 		public async Task FromStreamLoading()
 		{
 			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
 			{
 				var robotsFile = await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"));
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
-			}
-		}
-
-		[TestMethod]
-		public async Task FromStreamLoading_Cancellation()
-		{
-			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
-			{
-				await Assert.ThrowsExceptionAsync<OperationCanceledException>(
-					async () => await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"), new CancellationToken(true))
-				);
 			}
 		}
 	}

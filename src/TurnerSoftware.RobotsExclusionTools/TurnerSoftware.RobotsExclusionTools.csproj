@@ -1,11 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-    <AssemblyName>TurnerSoftware.RobotsExclusionTools</AssemblyName>
-    <Description>Robots.txt parsing and querying utility</Description>
-    <PackageTags>$(PackageBaseTags)</PackageTags>
-    <Authors>James Turner</Authors>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+		<AssemblyName>TurnerSoftware.RobotsExclusionTools</AssemblyName>
+		<Description>Robots.txt parsing and querying utility</Description>
+		<PackageTags>$(PackageBaseTags)</PackageTags>
+		<Authors>James Turner</Authors>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
+		<PackageReference Include="System.Memory" Version="4.5.4" />
+	</ItemGroup>
 
 </Project>
