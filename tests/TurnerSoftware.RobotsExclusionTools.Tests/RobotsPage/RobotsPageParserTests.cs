@@ -64,6 +64,15 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsPage
 		}
 
 		[TestMethod]
+		public void ListedAgentWithDuplicateRulesInLineValue()
+		{
+			var robotsPageDefinition = GetRobotsPageDefinition("RobotsPage-Example.txt");
+
+			Assert.IsTrue(robotsPageDefinition.TryGetRuleValue("max-snippet", "DuplicateRulesWithValue/2.1", out var value));
+			Assert.AreEqual("4", value);
+		}
+
+		[TestMethod]
 		public void ListedAgentDirectiveOverride()
 		{
 			var robotsPageDefinition = GetRobotsPageDefinition("DirectiveOverride-Example.txt");

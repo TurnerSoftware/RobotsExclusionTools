@@ -109,8 +109,24 @@ public struct RobotsPageTokenReader
 		}
 		else
 		{
-			Index = Value.Length;
-			return CreateToken(RobotsPageTokenType.Value, startIndex);
+			while (true)
+			{
+				ReadNext();
+				switch (Current)
+				{
+					case EndOfLine:
+					case ',':
+					case '\r':
+					case '\n':
+						//Walk back any spaces we may have encountered.
+						//This will effectively trim the value of spaces.
+						while (Index > 0 && Value.Span[Index - 1] == ' ')
+						{
+							Index--;
+						}
+						return CreateToken(RobotsPageTokenType.Value, startIndex);
+				}
+			}
 		}
 	}
 }
@@ -123,8 +139,8 @@ public enum RobotsPageTokenValueFormat
 	/// </summary>
 	Strict,
 	/// <summary>
-	/// For processing tokens with any character including spaces. When used,
-	/// there will not be any additional tokens left if a value is found.
+	/// For processing tokens without accepting a comma (,), carriage return (\r) 
+	/// or new line (\n). Any trailing spaces on the value will be ignored.
 	/// </summary>
 	Flexible
 }
