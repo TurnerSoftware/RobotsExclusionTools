@@ -45,8 +45,6 @@ The process of extracting this data from a request isn't currently part of this 
 If you extract the raw rules from the metatags and `X-Robots-Tag` header, you can pass those into the parser.
 The parser takes an array of rules and returns a `RobotsPageDefinition` file which allows querying of the rules by user agent.
 
-Like the `RobotsFileParser`, this parser is built around the tokenization and validation system and is similarly extendable.
-
 There is no RFC available to define the formats of metatag or `X-Robots-Tag` data.
 The parser follows the base formatting rules described in the NoRobots and the Robots Exclusion Protocol RFCs regarding fields combined with rules from [Google's documentation on the robots metatag](https://developers.google.com/search/reference/robots_meta_tag).
 There are ambiguities in the rules described there (like whether there is rule inheritence from global scope) which may be different to what other implementations may use.
