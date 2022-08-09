@@ -34,9 +34,10 @@ public class TestBase
 				var robotsFile = await GetRobotsFileAsync(name, method);
 				action(robotsFile);
 			}
-			catch (Exception ex)
+			catch
 			{
-				throw new AssertFailedException($"{ex.Message}\r\nMethod: {method}", ex);
+				Console.WriteLine($"Method: {method}");
+				throw;
 			}
 		}
 	}
