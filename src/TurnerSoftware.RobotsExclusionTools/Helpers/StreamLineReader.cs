@@ -13,17 +13,30 @@ public static class StreamLineReader
 	private const byte NewLineChar = (byte)'\n';
 	private static readonly StreamPipeReaderOptions Options = new(leaveOpen: true);
 
+	private static ReadOnlySpan<byte> ByteOrderMark => new byte[] { 0xEF, 0xBB, 0xBF };
+
 	public static async IAsyncEnumerable<ReadOnlySequence<byte>> EnumerateLinesAsSequenceAsync(
 		Stream stream,
 		[EnumeratorCancellation] CancellationToken cancellationToken = default
 	)
 	{
+		var skipByteOrderMarkCheck = false;
 		var reader = PipeReader.Create(stream, Options);
 
 		while (true)
 		{
 			var result = await reader.ReadAsync(cancellationToken);
 			var buffer = result.Buffer;
+
+			if (!skipByteOrderMarkCheck)
+			{
+				if (buffer.First.Span.StartsWith(ByteOrderMark))
+				{
+					buffer = buffer.Slice(ByteOrderMark.Length);
+				}
+				skipByteOrderMarkCheck = true;
+			}
+
 			SequencePosition? position;
 			do
 			{
