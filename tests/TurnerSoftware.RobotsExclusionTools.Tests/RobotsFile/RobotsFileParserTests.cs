@@ -1,7 +1,5 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TurnerSoftware.RobotsExclusionTools.Tests.TestSite;
@@ -138,16 +136,6 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
 					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
 				));
-			}
-		}
-
-		[TestMethod]
-		public async Task FromStreamLoading()
-		{
-			using (var fileStream = new FileStream("Resources/RobotsFile/NoRobots-RFC-Example.txt", FileMode.Open))
-			{
-				var robotsFile = await new RobotsFileParser().FromStreamAsync(fileStream, new Uri("http://www.example.org/"));
-				Assert.IsTrue(robotsFile.SiteAccessEntries.Any());
 			}
 		}
 	}
