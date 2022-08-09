@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
@@ -9,118 +8,136 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 	public class PathWildcardTests : TestBase
 	{
 		[TestMethod]
-		public void ExplicitWildcardSuffix()
+		public async Task ExplicitWildcardSuffix()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "ExplicitWildcardSuffix";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "ExplicitWildcardSuffix";
 
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void ExplicitWildcardPrefix()
+		public async Task ExplicitWildcardPrefix()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "ExplicitWildcardPrefix";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "ExplicitWildcardPrefix";
 
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.jpg"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.jpg"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/plan.html"), userAgent));
+			});
 		}
 		
 		[TestMethod]
-		public void ContainedWildcard()
+		public async Task ContainedWildcard()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "ContainedWildcard";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "ContainedWildcard";
 
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/organization/plan.html"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void PathWithAnyQueryString()
+		public async Task PathWithAnyQueryString()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "PathWithAnyQueryString";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "PathWithAnyQueryString";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void PathWithPartQueryString()
+		public async Task PathWithPartQueryString()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "PathWithPartQueryString";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "PathWithPartQueryString";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar&abc=123"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo=bar&abc=123"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void PathMustStartWith()
+		public async Task PathMustStartWith()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "PathMustStartWith";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "PathMustStartWith";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/about/org/plan.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/about/org/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void PathMustEndWith()
+		public async Task PathMustEndWith()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "PathMustEndWith";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "PathMustEndWith";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void OnlyWildcard()
+		public async Task OnlyWildcard()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "OnlyWildcard";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "OnlyWildcard";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/about.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html?foo="), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/planb.html?foo=bar"), userAgent));
+			});
 		}
 
 		[TestMethod]
-		public void DoubleWildcard()
+		public async Task DoubleWildcard()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "DoubleWildcard";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "DoubleWildcard";
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));;
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/secret/plan.html"), userAgent));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/plan.html"), userAgent));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("http://www.example.org/org/secret/plan.html"), userAgent));
+			});
 		}
 	}
 }

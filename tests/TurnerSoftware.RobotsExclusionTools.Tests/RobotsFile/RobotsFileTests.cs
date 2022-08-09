@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
@@ -46,50 +47,58 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		}
 
 		[TestMethod]
-		public void IsAllowedAccessViaRelativeUris()
+		public async Task IsAllowedAccessViaRelativeUris()
 		{
-			var robotsFile = GetRfcRobotsFile();
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "Excite/1.0"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Excite/1.0"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/index.html", UriKind.Relative), "Unhipbot/1.0"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Unhipbot/1.0"));
+			await WithRobotsFileAsync("NoRobots-RFC-Example.txt", robotsFile =>
+			{
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "Excite/1.0"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Excite/1.0"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/index.html", UriKind.Relative), "Unhipbot/1.0"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/server.html", UriKind.Relative), "Unhipbot/1.0"));
+			});
 		}
 
 		[TestMethod]
-		public void FieldCasing()
+		public async Task FieldCasing()
 		{
-			var robotsFile = GetRobotsFile("FieldCasing-Example.txt");
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "A"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "B"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "C"));
+			await WithRobotsFileAsync("FieldCasing-Example.txt", robotsFile =>
+			{
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "A"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "B"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/RFCCompliant", UriKind.Relative), "C"));
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "A"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "B"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "C"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "A"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "B"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseUserAgent", UriKind.Relative), "C"));
 
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "A"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "B"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "C"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "A"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "B"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/DifferentCaseRule", UriKind.Relative), "C"));
+			});
 		}
 
 		[TestMethod]
-		public void BlankSpacingBetweenRecords()
+		public async Task BlankSpacingBetweenRecords()
 		{
-			var robotsFile = GetRobotsFile("BlankSpacing-Example.txt");
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "BeforeSpacing"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpace"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterTab"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpaceAndTab"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AnythingElse"));
+			await WithRobotsFileAsync("BlankSpacing-Example.txt", robotsFile =>
+			{
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "BeforeSpacing"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpace"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterTab"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AfterSpaceAndTab"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "AnythingElse"));
+			});
 		}
 
 		[TestMethod]
-		public void Comments()
+		public async Task Comments()
 		{
-			var robotsFile = GetRobotsFile("Comments-Example.txt");
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "A"));
-			Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "B"));
-			Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "C"));
+			await WithRobotsFileAsync("Comments-Example.txt", robotsFile =>
+			{
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "A"));
+				Assert.IsFalse(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "B"));
+				Assert.IsTrue(robotsFile.IsAllowedAccess(new Uri("/", UriKind.Relative), "C"));
+			});
 		}
 	}
 }

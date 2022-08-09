@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
@@ -10,23 +8,26 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 	public class CustomFieldTests : TestBase
 	{
 		[TestMethod]
-		public void CrawlDelayApplied()
+		public async Task CrawlDelayApplied()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-			var userAgent = "AnyUserAgent";
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				var userAgent = "AnyUserAgent";
 
-			Assert.IsTrue(robotsFile.TryGetEntryForUserAgent(userAgent, out var entry));
-			Assert.AreEqual(60, entry.CrawlDelay);
+				Assert.IsTrue(robotsFile.TryGetEntryForUserAgent(userAgent, out var entry));
+				Assert.AreEqual(60, entry.CrawlDelay);
+			});
 		}
 
 		[TestMethod]
-		public void SitemapsFromRobots()
+		public async Task SitemapsFromRobots()
 		{
-			var robotsFile = GetRobotsFile("Comprehensive-Example.txt");
-
-			Assert.AreEqual(2, robotsFile.SitemapEntries.Count);
-			Assert.AreEqual("http://www.example.org/sitemap.xml", robotsFile.SitemapEntries.First().Sitemap.ToString());
-			Assert.AreEqual("http://www.example.org/sitemap2.xml", robotsFile.SitemapEntries.Last().Sitemap.ToString());
+			await WithRobotsFileAsync("Comprehensive-Example.txt", robotsFile =>
+			{
+				Assert.AreEqual(2, robotsFile.SitemapEntries.Count);
+				Assert.AreEqual("http://www.example.org/sitemap.xml", robotsFile.SitemapEntries.First().Sitemap.ToString());
+				Assert.AreEqual("http://www.example.org/sitemap2.xml", robotsFile.SitemapEntries.Last().Sitemap.ToString());
+			});
 		}
 	}
 }
