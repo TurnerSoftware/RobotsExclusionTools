@@ -1,5 +1,5 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using TurnerSoftware.RobotsExclusionTools.Helpers;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.Helpers;
@@ -19,9 +19,9 @@ public class RobotsExclusionProtocolHelperTests
 	[DataRow(9, new byte[] { 0xF2, 0xBF, 0xBF, 0x80 }, 4)]
 	[DataRow(10, new byte[] { 0xF4, 0x8F, 0x80, 0x80 }, 4)]
 	[DataTestMethod]
-	public void TryReadUtf8ByteSequenceTest(int _, object[] rawInput, int? expectedNumberOfBytes)
+	public void TryReadUtf8ByteSequenceTest(int _, byte[] rawInput, int? expectedNumberOfBytes)
 	{
-		var bytes = Array.ConvertAll(rawInput, (input) => (byte)Convert.ToInt32(input));
+		var bytes = rawInput; //Array.ConvertAll(rawInput, (input) => (byte)Convert.ToInt32(input));
 		var result = RobotsExclusionProtocolHelper.TryReadUtf8ByteSequence(bytes, out var actual);
 		if (expectedNumberOfBytes is null)
 		{

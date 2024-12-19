@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TurnerSoftware.RobotsExclusionTools.Tests.TestSite
+﻿namespace TurnerSoftware.RobotsExclusionTools.Tests.TestSite
 {
-	public class SiteContext
+	public class SiteContext(int expectedStatusCode)
 	{
-		public int StatusCode { get; set; }
+		public int ExpectedStatusCode { get; set; } = expectedStatusCode;
 	}
 }

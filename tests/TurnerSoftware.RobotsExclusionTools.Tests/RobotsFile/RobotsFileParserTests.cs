@@ -1,28 +1,31 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TurnerSoftware.RobotsExclusionTools.Tests.TestSite;
 
 namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 {
 	[TestClass]
 	public class RobotsFileParserTests : TestBase
 	{
-		private static TestSiteManager GetRobotsSiteManager(int statusCode)
+		private static WebApplicationFactory<Program> GetTestSiteFactory(int statusCode)
 		{
-			return new TestSiteManager(new SiteContext { StatusCode = statusCode });
+			var factory = new TestWebApplicationFactory<Program>(statusCode);
+
+			return factory;
 		}
 
 		[TestMethod]
 		public async Task FromUriLoading_200_OK_PerFileRules()
 		{
-			using (var siteManager = GetRobotsSiteManager(200))
+			using (var factory = GetTestSiteFactory(200))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = factory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
-					s.UserAgents.Contains("MyCustom-UserAgent") && 
+					s.UserAgents.Contains("MyCustom-UserAgent") &&
 					s.PathRules.Any(p => string.IsNullOrEmpty(p.Path) && p.RuleType == PathRuleType.Disallow)
 				));
 			}
@@ -31,9 +34,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_404_NotFound_AllowAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(404))
+			using (var webFactory = GetTestSiteFactory(404))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen404NotFound = true
@@ -44,9 +47,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_404_NotFound_DenyAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(404))
+			using (var webFactory = GetTestSiteFactory(404))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen404NotFound = false
@@ -60,9 +63,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_401_Unauthorized_AllowAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(401))
+			using (var webFactory = GetTestSiteFactory(401))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen401Unauthorized = true
@@ -73,9 +76,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_401_Unauthorized_DenyAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(401))
+			using (var webFactory = GetTestSiteFactory(401))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen401Unauthorized = false
@@ -89,9 +92,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_403_Forbidden_AllowAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(403))
+			using (var webFactory = GetTestSiteFactory(403))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen403Forbidden = true
@@ -102,9 +105,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_AccessRules_403_Forbidden_DenyAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(403))
+			using (var webFactory = GetTestSiteFactory(403))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"), new RobotsFileAccessRules
 				{
 					AllowAllWhen403Forbidden = false
@@ -118,9 +121,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_OtherHttpStatus_AllowAll()
 		{
-			using (var siteManager = GetRobotsSiteManager(418))
+			using (var webFactory = GetTestSiteFactory(418))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
 				Assert.IsFalse(robotsFile.SiteAccessEntries.Any());
 			}
@@ -129,9 +132,9 @@ namespace TurnerSoftware.RobotsExclusionTools.Tests.RobotsFile
 		[TestMethod]
 		public async Task FromUriLoading_DefaultNoRobotsRFCRules()
 		{
-			using (var siteManager = GetRobotsSiteManager(401))
+			using (var webFactory = GetTestSiteFactory(401))
 			{
-				var client = siteManager.GetHttpClient();
+				var client = webFactory.CreateClient();
 				var robotsFile = await new RobotsFileParser(client).FromUriAsync(new Uri("http://localhost/robots.txt"));
 				Assert.IsTrue(robotsFile.SiteAccessEntries.Any(s =>
 					s.UserAgents.Contains("*") && s.PathRules.Any(p => p.Path == "/" && p.RuleType == PathRuleType.Disallow)
